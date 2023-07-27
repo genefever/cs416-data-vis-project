@@ -23,6 +23,7 @@ function setupChart() {
   const margin = { top: 20, right: 30, bottom: 30, left: 50 }
   let width = window.innerWidth - margin.left - margin.right
   let height = window.innerHeight - margin.top - margin.bottom
+  let windowHeight = window.innerHeight
 
   wrapper
     .attr('width', '100%')
@@ -203,7 +204,7 @@ function handleResize() {
   const bounds = wrapper.select('g')
 
   width = window.innerWidth - margin.left - margin.right
-  height = window.innerHeight - margin.top - margin.bottom
+  height = windowHeight - margin.top - margin.bottom
 
   wrapper
     .attr('width', '100%')
@@ -229,7 +230,10 @@ function handleResize() {
 }
 
 // Call handleResize on window resize event
-window.addEventListener('resize', handleResize)
+window.addEventListener('resize', () => {
+  windowHeight = window.innerHeight // Update the windowHeight variable
+  handleResize()
+})
 
 d3.csv('data_deaths_2020_2023.csv')
   .then(processData)
@@ -237,5 +241,3 @@ d3.csv('data_deaths_2020_2023.csv')
   .catch((error) => {
     console.error('Error loading CSV data:', error)
   })
-
-window.addEventListener('resize', handleResize)
