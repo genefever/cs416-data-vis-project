@@ -199,10 +199,14 @@ function setupChart() {
 
   // Create an array of objects representing the legends
   const legends = [
-    { name: 'All Cause', color: 'red' },
-    { name: 'Natural Cause', color: 'green' },
-    { name: 'COVID-19 (Multiple Cause of Death)', color: 'blue' },
-    { name: 'COVID-19 (Underlying Cause of Death)', color: 'orange' },
+    { name: 'All Cause', color: 'red', active: true },
+    { name: 'Natural Cause', color: 'green', active: true },
+    { name: 'COVID-19 (Multiple Cause of Death)', color: 'blue', active: true },
+    {
+      name: 'COVID-19 (Underlying Cause of Death)',
+      color: 'orange',
+      active: true,
+    },
   ]
 
   // Append the legends
@@ -218,6 +222,17 @@ function setupChart() {
     .append('g')
     .attr('class', 'legend-item')
     .attr('transform', (d, i) => `translate(0, ${i * 25})`)
+    .on('click', function (event, d) {
+      d.active = !d.active // Toggle the active state
+
+      // Update the visibility of the corresponding line
+      const line = bounds.select(`path[stroke="${d.color}"]`)
+      line.style('opacity', d.active ? 1 : 0)
+
+      // Update the visibility of the legend color
+      const legendColor = d3.select(this).select('.legend-color')
+      legendColor.style('opacity', d.active ? 1 : 0.5)
+    })
 
   legendItems
     .append('rect')
@@ -225,6 +240,7 @@ function setupChart() {
     .attr('width', 20)
     .attr('height', 20)
     .style('fill', (d) => d.color)
+    .style('opacity', (d) => (d.active ? 1 : 0.5)) // Set initial opacity based on active state
 
   legendItems
     .append('text')
