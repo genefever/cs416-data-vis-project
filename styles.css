@@ -19,12 +19,28 @@ body {
 }
 
 #tooltip {
+  position: absolute;
   background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 12px;
   padding: 8px;
   z-index: 9999;
+  text-align: center;
+  max-width: 200px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none; /* Prevent the tooltip from interfering with mouse events */
+}
+
+#tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: -5px; /* Position the pointer at the bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #ccc; /* Change to border-top to create a pointer at the bottom */
 }
 
 h1 {
@@ -65,8 +81,13 @@ path:nth-child(4) {
 .axis path,
 .axis line {
   fill: none;
-  stroke: #999;
+  stroke: #ccc;
+  stroke-width: 1px;
   shape-rendering: crispEdges;
+}
+
+.axis .tick line {
+  stroke-width: 2px; /* Increase the stroke width to make it bolder */
 }
 
 .axis text {
@@ -76,4 +97,10 @@ path:nth-child(4) {
 
 .axis .domain {
   display: none;
+}
+
+.vertical-line {
+  stroke: red; /* Change the color to match the circle */
+  stroke-width: 1px;
+  stroke-dasharray: 3 3; /* Make it a dashed line */
 }

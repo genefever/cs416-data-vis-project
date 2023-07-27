@@ -127,15 +127,25 @@ function setupChart() {
     .style('text-anchor', 'middle')
     .text('Number of Deaths')
 
+  // Add circle for the "hovered" point
+  const circle = bounds
+    .append('circle')
+    .attr('class', 'hover-circle')
+    .attr('r', 7)
+    .style('fill', 'red')
+    .style('opacity', 0) // Initially hide the circle
+
   // Add vertical line
   const verticalLine = bounds
     .append('line')
     .attr('class', 'vertical-line')
+    .attr('x1', 0)
+    .attr('x2', 0)
     .attr('y1', 0)
     .attr('y2', height)
     .style('stroke', 'black')
     .style('stroke-width', '1px')
-    .style('opacity', 0) // Initially hide the line
+    .style('opacity', 0) // Initially hide the vertical line
 
   // Add tooltip functionality
   const tooltip = d3.select('#tooltip')
@@ -148,10 +158,12 @@ function setupChart() {
     .style('opacity', 0) // Initially hide the overlay
     .on('mouseover', function () {
       tooltip.style('opacity', 1) // Show the tooltip when mouseover occurs
+      circle.style('opacity', 1) // Show the circle when mouseover occurs
       verticalLine.style('opacity', 1) // Show the vertical line when mouseover occurs
     })
     .on('mouseout', function () {
       tooltip.style('opacity', 0) // Hide the tooltip when mouseout occurs
+      circle.style('opacity', 0) // Hide the circle when mouseout occurs
       verticalLine.style('opacity', 0) // Hide the vertical line when mouseout occurs
     })
     .on('mousemove', function (event) {
@@ -161,12 +173,28 @@ function setupChart() {
       const index = bisect(data, date)
       const datapoint = data[index]
 
+      const formatDate = d3.timeFormat('%B %Y')
+      const formattedDate = formatDate(datapoint.date)
+
+      const formatDeaths = d3.format(',')
+      const formattedDeaths = formatDeaths(datapoint.all_deaths)
+
       tooltip
         .style('left', x + 'px')
         .style('top', y + 'px')
-        .html(`Date: ${datapoint.date}<br>Deaths: ${datapoint.all_deaths}`)
+        .html(`<strong>${formattedDate}</strong><br>Deaths: ${formattedDeaths}`)
 
-      verticalLine.attr('x1', x).attr('x2', x) // Update vertical line position
+      const closestDataPoint = data[index]
+      const closestXValue = xScale(closestDataPoint.date)
+      const closestYValue = yScale(closestDataPoint.all_deaths)
+
+      circle.attr('cx', closestXValue).attr('cy', closestYValue) // Update circle position
+
+      verticalLine
+        .attr('x1', closestXValue)
+        .attr('x2', closestXValue)
+        .attr('y1', closestYValue)
+        .attr('y2', height) // Update vertical line position
     })
 }
 
