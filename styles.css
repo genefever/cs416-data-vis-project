@@ -1,0 +1,65 @@
+body {
+  background-color: #f7f7f7;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+#chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  width: 90%; /* Adjust the width as needed */
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  padding: 20px;
+  font-size: 32px;
+  text-transform: uppercase;
+}
+
+svg {
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+path {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+path:nth-child(1) {
+  stroke: #ff4d4f;
+}
+
+path:nth-child(2) {
+  stroke: #52c41a;
+}
+
+path:nth-child(3) {
+  stroke: #1890ff;
+}
+
+path:nth-child(4) {
+  stroke: #fa8c16;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #999;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  font-size: 12px;
+  fill: #666;
+}
+
+.axis .domain {
+  display: none;
+}
