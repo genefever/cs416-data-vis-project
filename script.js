@@ -21,7 +21,6 @@ function setupChart() {
   // Set up the SVG container
   const wrapper = d3.select('#chart').append('svg')
   const bounds = wrapper.append('g')
-
   const margin = { top: 20, right: 30, bottom: 30, left: 50 }
   let width = window.innerWidth - margin.left - margin.right
   let height = window.innerHeight - margin.top - margin.bottom
@@ -43,7 +42,6 @@ function setupChart() {
     .scaleTime()
     .domain(d3.extent(data, (d) => d.date))
     .range([0, width])
-
   const yScale = d3
     .scaleLinear()
     .domain([
@@ -60,22 +58,22 @@ function setupChart() {
     .range([height, 0])
 
   // Set up line generators
-  const line1 = d3
+  const lineAllDeaths = d3
     .line()
     .x((d) => xScale(d.date))
     .y((d) => yScale(d.all_deaths))
 
-  const line2 = d3
+  const lineNaturalDeaths = d3
     .line()
     .x((d) => xScale(d.date))
     .y((d) => yScale(d.natural_deaths))
 
-  const line3 = d3
+  const lineCovidMultiple = d3
     .line()
     .x((d) => xScale(d.date))
     .y((d) => yScale(d.covid_19_multiple))
 
-  const line4 = d3
+  const lineCovidUnderlying = d3
     .line()
     .x((d) => xScale(d.date))
     .y((d) => yScale(d.covid_19_underlying))
@@ -86,37 +84,38 @@ function setupChart() {
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'red')
-    .attr('d', line1)
+    .attr('d', lineAllDeaths)
 
   bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'green')
-    .attr('d', line2)
+    .attr('d', lineNaturalDeaths)
 
   bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'blue')
-    .attr('d', line3)
+    .attr('d', lineCovidMultiple)
 
   bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'orange')
-    .attr('d', line4)
+    .attr('d', lineCovidUnderlying)
 
   // Append x-axis
   bounds
     .append('g')
+    .attr('class', 'x-axis')
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
 
   // Append y-axis
-  bounds.append('g').call(d3.axisLeft(yScale))
+  bounds.append('g').attr('class', 'y-axis').call(d3.axisLeft(yScale))
 
   // Append y-axis label
   bounds
@@ -127,6 +126,48 @@ function setupChart() {
     .attr('dy', '1em')
     .style('text-anchor', 'middle')
     .text('Number of Deaths')
+
+  // Add vertical line
+  const verticalLine = bounds
+    .append('line')
+    .attr('class', 'vertical-line')
+    .attr('y1', 0)
+    .attr('y2', height)
+    .style('stroke', 'black')
+    .style('stroke-width', '1px')
+    .style('opacity', 0) // Initially hide the line
+
+  // Add tooltip functionality
+  const tooltip = d3.select('#tooltip')
+
+  bounds
+    .append('rect')
+    .attr('class', 'overlay')
+    .attr('width', width)
+    .attr('height', height)
+    .style('opacity', 0) // Initially hide the overlay
+    .on('mouseover', function () {
+      tooltip.style('opacity', 1) // Show the tooltip when mouseover occurs
+      verticalLine.style('opacity', 1) // Show the vertical line when mouseover occurs
+    })
+    .on('mouseout', function () {
+      tooltip.style('opacity', 0) // Hide the tooltip when mouseout occurs
+      verticalLine.style('opacity', 0) // Hide the vertical line when mouseout occurs
+    })
+    .on('mousemove', function (event) {
+      const [x, y] = d3.pointer(event, this)
+      const date = xScale.invert(x)
+      const bisect = d3.bisector((d) => d.date).left
+      const index = bisect(data, date)
+      const datapoint = data[index]
+
+      tooltip
+        .style('left', x + 'px')
+        .style('top', y + 'px')
+        .html(`Date: ${datapoint.date}<br>Deaths: ${datapoint.all_deaths}`)
+
+      verticalLine.attr('x1', x).attr('x2', x) // Update vertical line position
+    })
 }
 
 // Function to handle window resize
@@ -156,9 +197,7 @@ function handleResize() {
     .select('.x-axis')
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
-
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
-
   bounds.selectAll('path').attr('d', (line) => line(data))
 }
 
