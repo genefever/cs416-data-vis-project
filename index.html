@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>D3.js Example</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <script>
+      // use d3.js to import 'data_deaths_2020_2023.csv'
+      d3.csv('data_deaths_2020_2023.csv').then(function (data) {
+        console.log(data)
+      })
+    </script>
+  </body>
+</html>
