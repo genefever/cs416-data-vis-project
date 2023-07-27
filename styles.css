@@ -99,6 +99,22 @@ path:nth-child(4) {
   display: none;
 }
 
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+.legend-text {
+  font-size: 12px;
+}
+
 .vertical-line {
   stroke: red; /* Change the color to match the circle */
   stroke-width: 1px;

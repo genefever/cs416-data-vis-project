@@ -196,6 +196,42 @@ function setupChart() {
         .attr('y1', closestYValue)
         .attr('y2', height) // Update vertical line position
     })
+
+  // Create an array of objects representing the legends
+  const legends = [
+    { name: 'All Cause', color: 'red' },
+    { name: 'Natural Cause', color: 'green' },
+    { name: 'COVID-19 (Multiple Cause of Death)', color: 'blue' },
+    { name: 'COVID-19 (Underlying Cause of Death)', color: 'orange' },
+  ]
+
+  // Append the legends
+  const legendsContainer = bounds
+    .append('g')
+    .attr('class', 'legends')
+    .attr('transform', `translate(${width + margin.right - 150}, 0)`)
+
+  const legendItems = legendsContainer
+    .selectAll('.legend-item')
+    .data(legends)
+    .enter()
+    .append('g')
+    .attr('class', 'legend-item')
+    .attr('transform', (d, i) => `translate(0, ${i * 25})`)
+
+  legendItems
+    .append('rect')
+    .attr('class', 'legend-color')
+    .attr('width', 20)
+    .attr('height', 20)
+    .style('fill', (d) => d.color)
+
+  legendItems
+    .append('text')
+    .attr('class', 'legend-text')
+    .attr('x', 30)
+    .attr('y', 14)
+    .text((d) => d.name)
 }
 
 // Function to handle window resize
