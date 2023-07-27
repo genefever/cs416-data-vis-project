@@ -11,7 +11,6 @@ function processData(csvData) {
   }))
 
   if (data.length === 0) {
-    // Handle empty data array
     console.error('Empty data array')
     return
   }
