@@ -1,23 +1,23 @@
 const parseDate = d3.timeParse('%m/%d/%Y')
 let data = []
 
-d3.csv('data_deaths_2020_2023.csv').then(function (csvData) {
-  data = csvData.map(function (d) {
-    return {
-      date: parseDate(d['End Date']),
-      all_deaths: +d['All Cause'],
-      natural_deaths: +d['Natural Cause'],
-      covid_19_multiple: +d['COVID-19 (Multiple Cause of Death)'],
-      covid_19_underlying: +d['COVID-19 (Underlying Cause of Death)'],
-    }
-  })
+function processData(csvData) {
+  data = csvData.map((d) => ({
+    date: parseDate(d['End Date']),
+    all_deaths: +d['All Cause'],
+    natural_deaths: +d['Natural Cause'],
+    covid_19_multiple: +d['COVID-19 (Multiple Cause of Death)'],
+    covid_19_underlying: +d['COVID-19 (Underlying Cause of Death)'],
+  }))
 
   if (data.length === 0) {
     // Handle empty data array
     console.error('Empty data array')
     return
   }
+}
 
+function setupChart() {
   // Set up the SVG container
   const margin = { top: 20, right: 30, bottom: 30, left: 50 }
   let width = window.innerWidth - margin.left - margin.right
@@ -126,35 +126,44 @@ d3.csv('data_deaths_2020_2023.csv').then(function (csvData) {
     .attr('dy', '1em')
     .style('text-anchor', 'middle')
     .text('Number of Deaths')
+}
 
-  // Function to handle window resize
-  function handleResize() {
-    width = window.innerWidth - margin.left - margin.right
-    height = window.innerHeight - margin.top - margin.bottom
+// Function to handle window resize
+function handleResize() {
+  width = window.innerWidth - margin.left - margin.right
+  height = window.innerHeight - margin.top - margin.bottom
 
-    svg
-      .attr('width', '100%')
-      .attr('height', '100%')
-      .attr(
-        'viewBox',
-        `0 0 ${width + margin.left + margin.right} ${
-          height + margin.top + margin.bottom
-        }`
-      )
+  svg
+    .attr('width', '100%')
+    .attr('height', '100%')
+    .attr(
+      'viewBox',
+      `0 0 ${width + margin.left + margin.right} ${
+        height + margin.top + margin.bottom
+      }`
+    )
 
-    xScale.range([0, width])
-    yScale.range([height, 0])
+  xScale.range([0, width])
+  yScale.range([height, 0])
 
-    svg
-      .select('.x-axis')
-      .attr('transform', `translate(0, ${height})`)
-      .call(d3.axisBottom(xScale))
+  svg
+    .select('.x-axis')
+    .attr('transform', `translate(0, ${height})`)
+    .call(d3.axisBottom(xScale))
 
-    svg.select('.y-axis').call(d3.axisLeft(yScale))
+  svg.select('.y-axis').call(d3.axisLeft(yScale))
 
-    svg.selectAll('path').attr('d', (line) => line(data))
-  }
+  svg.selectAll('path').attr('d', (line) => line(data))
+}
 
-  // Call handleResize on window resize event
-  window.addEventListener('resize', handleResize)
-})
+// Call handleResize on window resize event
+window.addEventListener('resize', handleResize)
+
+d3.csv('data_deaths_2020_2023.csv')
+  .then(processData)
+  .then(setupChart)
+  .catch((error) => {
+    console.error('Error loading CSV data: ', error)
+  })
+
+window.addEventListener('resize', handleResize)
