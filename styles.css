@@ -11,12 +11,17 @@ body {
   align-items: center;
   height: 80vh;
   width: 90%; /* Adjust the width as needed */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin-top: 20px;
 }
 
 h1 {
   color: #333;
   text-align: center;
-  padding: 20px;
+  padding: 10px;
   font-size: 32px;
   text-transform: uppercase;
 }
