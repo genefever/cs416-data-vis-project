@@ -117,6 +117,16 @@ d3.csv('data_deaths_2020_2023.csv').then(function (csvData) {
   // Append y-axis
   svg.append('g').call(d3.axisLeft(yScale))
 
+  // Append y-axis label
+  svg
+    .append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0 - margin.left - 50)
+    .attr('x', 0 - height / 2)
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .text('Number of Deaths')
+
   // Function to handle window resize
   function handleResize() {
     width = window.innerWidth - margin.left - margin.right
