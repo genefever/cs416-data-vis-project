@@ -19,13 +19,14 @@ function processData(csvData) {
 
 function setupChart() {
   // Set up the SVG container
+  const wrapper = d3.select('#chart').append('svg')
+  const bounds = wrapper.append('g')
+
   const margin = { top: 20, right: 30, bottom: 30, left: 50 }
   let width = window.innerWidth - margin.left - margin.right
   let height = window.innerHeight - margin.top - margin.bottom
 
-  const svg = d3
-    .select('#chart')
-    .append('svg')
+  wrapper
     .attr('width', '100%')
     .attr('height', '100%')
     .attr(
@@ -34,8 +35,8 @@ function setupChart() {
         height + margin.top + margin.bottom
       }`
     )
-    .append('g')
-    .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+  bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
   // Set up scales
   const xScale = d3
@@ -80,28 +81,28 @@ function setupChart() {
     .y((d) => yScale(d.covid_19_underlying))
 
   // Append the lines
-  svg
+  bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'red')
     .attr('d', line1)
 
-  svg
+  bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'green')
     .attr('d', line2)
 
-  svg
+  bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', 'blue')
     .attr('d', line3)
 
-  svg
+  bounds
     .append('path')
     .datum(data)
     .attr('fill', 'none')
@@ -109,16 +110,16 @@ function setupChart() {
     .attr('d', line4)
 
   // Append x-axis
-  svg
+  bounds
     .append('g')
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
 
   // Append y-axis
-  svg.append('g').call(d3.axisLeft(yScale))
+  bounds.append('g').call(d3.axisLeft(yScale))
 
   // Append y-axis label
-  svg
+  bounds
     .append('text')
     .attr('transform', 'rotate(-90)')
     .attr('y', 0 - margin.left - 50)
@@ -130,10 +131,13 @@ function setupChart() {
 
 // Function to handle window resize
 function handleResize() {
+  const wrapper = d3.select('#chart').select('svg')
+  const bounds = wrapper.select('g')
+
   width = window.innerWidth - margin.left - margin.right
   height = window.innerHeight - margin.top - margin.bottom
 
-  svg
+  wrapper
     .attr('width', '100%')
     .attr('height', '100%')
     .attr(
@@ -143,17 +147,19 @@ function handleResize() {
       }`
     )
 
+  bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
+
   xScale.range([0, width])
   yScale.range([height, 0])
 
-  svg
+  bounds
     .select('.x-axis')
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
 
-  svg.select('.y-axis').call(d3.axisLeft(yScale))
+  bounds.select('.y-axis').call(d3.axisLeft(yScale))
 
-  svg.selectAll('path').attr('d', (line) => line(data))
+  bounds.selectAll('path').attr('d', (line) => line(data))
 }
 
 // Call handleResize on window resize event
@@ -163,7 +169,7 @@ d3.csv('data_deaths_2020_2023.csv')
   .then(processData)
   .then(setupChart)
   .catch((error) => {
-    console.error('Error loading CSV data: ', error)
+    console.error('Error loading CSV data:', error)
   })
 
 window.addEventListener('resize', handleResize)
