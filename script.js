@@ -274,10 +274,12 @@ function setupChart(data) {
 
 // Function to handle window resize
 function handleResize(data) {
+  bounds.select('.legend').selectAll('*').remove()
+
   const wrapper = d3.select('#chart').select('svg')
   const bounds = wrapper.select('g')
 
-  const margin = { top: 20, right: 30, bottom: 30, left: 50 }
+  const margin = { top: 20, right: 30, bottom: 60, left: 50 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
@@ -335,6 +337,59 @@ function handleResize(data) {
 
     bounds.selectAll(`.${key}-line`).attr('d', line)
   })
+
+  // Update x-axis label position
+  bounds
+    .select('.x-axis-label')
+    .attr('x', width / 2)
+    .attr('y', height + margin.bottom - 10) // Adjust the y position as needed
+
+  // Update legend position
+  const legendItemsPerRow = 4
+  const legendItemWidth = 100
+  const legendPadding = 10
+  const legendRows = Math.ceil(dataKeys.length / legendItemsPerRow)
+  const legend = bounds
+    .select('.legend')
+    .attr('transform', `translate(0, ${height + margin.bottom + 30})`)
+
+  // Remove existing legend items before updating
+  bounds.select('.legend').selectAll('*').remove()
+
+  const legendRow = legend
+    .selectAll('.legend-row')
+    .data(d3.range(legendRows))
+    .enter()
+    .append('g')
+    .attr('class', 'legend-row')
+    .attr('transform', (d, i) => `translate(0, ${i * (20 + legendPadding)})`)
+
+  const legendItems = legendRow
+    .selectAll('.legend-item')
+    .data((d, i) =>
+      dataKeys.slice(i * legendItemsPerRow, (i + 1) * legendItemsPerRow)
+    )
+    .enter()
+    .append('g')
+    .attr('class', 'legend-item')
+    .attr('transform', (d, i) => `translate(${i * legendItemWidth}, 0)`)
+
+  // Add colored circles to represent the lines
+  legendItems
+    .append('circle')
+    .attr('cx', 5)
+    .attr('cy', 5)
+    .attr('r', 5)
+    .attr('fill', (d, i) => dataColors[dataKeys.indexOf(d)])
+
+  // Add text labels for the legend keys
+  legendItems
+    .append('text')
+    .attr('x', 15)
+    .attr('y', 10)
+    .text((d) => d)
+    .style('font-size', '12px')
+    .attr('alignment-baseline', 'middle')
 }
 
 // Function to parse and process data
