@@ -24,13 +24,19 @@ const dataColors = [
   'gray',
   'black',
   'olive',
-  'stateblue',
-  'goldenroad',
+  'peru',
+  'brown',
   'darkcyan',
   'darkmagenta',
-  '"khaki"',
+  'khaki',
   'sienna',
 ]
+let xScale, yScale
+const lineGenerator = (key) =>
+  d3
+    .line()
+    .x((d) => xScale(d.date))
+    .y((d) => yScale(d[key]))
 
 // Function to set up the chart with data
 function setupChart(data) {
@@ -54,11 +60,11 @@ function setupChart(data) {
   bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
   // Set up scales
-  const xScale = d3
+  xScale = d3
     .scaleTime()
     .domain(d3.extent(data, (d) => d.date))
     .range([0, width])
-  const yScale = d3
+  yScale = d3
     .scaleLinear()
     .domain([
       0,
@@ -84,19 +90,12 @@ function setupChart(data) {
     .range([height, 0])
 
   // Append the lines dynamically based on data keys
-  const lineGenerator = (key, strokeColor) =>
-    d3
-      .line()
-      .x((d) => xScale(d.date))
-      .y((d) => yScale(d[key]))
-
   dataKeys.forEach((key, index) => {
     const line = lineGenerator(key)
 
     bounds
-      .selectAll(`.${key}-line`)
-      .data([data])
-      .join('path')
+      .append('path')
+      .datum(data)
       .attr('class', `${key}-line line`)
       .attr('fill', 'none')
       .attr('stroke', dataColors[index])
@@ -159,15 +158,14 @@ function setupChart(data) {
     .style('opacity', 0) // Initially hide the overlay
     .on('mouseover', function () {
       tooltip.style('opacity', 1) // Show the tooltip when mouseover occurs
-      circle.style('opacity', 1) // Show the circle when mouseover occurs
+      bounds.selectAll('circle').style('opacity', 1) // Show all circles when mouseover occurs
       verticalLine.style('opacity', 1) // Show the vertical line when mouseover occurs
     })
     .on('mouseout', function () {
       tooltip.style('opacity', 0) // Hide the tooltip when mouseout occurs
-      circle.style('opacity', 0) // Hide the circle when mouseout occurs
+      bounds.selectAll('circle').style('opacity', 0) // Hide all circles when mouseout occurs
       verticalLine.style('opacity', 0) // Hide the vertical line when mouseout occurs
     })
-
     .on('mousemove', function (event) {
       const [x, y] = d3.pointer(event, this)
       const date = xScale.invert(x)
@@ -183,7 +181,6 @@ function setupChart(data) {
       // Build the tooltip HTML content with colored circles
       let tooltipHtml = `<strong>${formattedDate}</strong><br>`
       dataKeys.forEach((key, dataIndex) => {
-        // Use a different variable for the loop
         const formattedValue = formatDeaths(datapoint[key])
         const lineColor = dataColors[dataIndex]
         tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
@@ -202,7 +199,6 @@ function setupChart(data) {
       // Show circles for each data key when mouseover occurs
       dataKeys.forEach((key, dataIndex) => {
         const circle = bounds.select(`.${key}-circle`)
-
         const closestDataPoint = data[index]
         const closestXValue = xScale(closestDataPoint.date)
         const closestYValue = yScale(closestDataPoint[key])
@@ -213,11 +209,7 @@ function setupChart(data) {
           .style('opacity', 1)
       })
 
-      verticalLine
-        .attr('x1', closestXValue)
-        .attr('x2', closestXValue)
-        .attr('y1', closestYValue)
-        .attr('y2', height) // Update vertical line position
+      verticalLine.attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', height) // Update vertical line position
     })
 }
 
@@ -243,11 +235,11 @@ function handleResize(data) {
   bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
   // Update scales with new data range
-  const xScale = d3
+  xScale = d3
     .scaleTime()
     .domain(d3.extent(data, (d) => d.date))
     .range([0, width])
-  const yScale = d3
+  yScale = d3
     .scaleLinear()
     .domain([
       0,
@@ -279,12 +271,6 @@ function handleResize(data) {
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
 
   // Update the lines on resize
-  const lineGenerator = (key) =>
-    d3
-      .line()
-      .x((d) => xScale(d.date))
-      .y((d) => yScale(d[key]))
-
   dataKeys.forEach((key, index) => {
     const line = lineGenerator(key)
 
