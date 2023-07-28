@@ -52,6 +52,16 @@ function setupChart(data) {
           d.natural_deaths,
           d.covid_19_multiple,
           d.covid_19_underlying,
+          d.drug_overdose,
+          d.homicide,
+          d.suicide,
+          d.vehicle_accidents,
+          d.unintentional_injuries,
+          d.heart_diseases,
+          d.cerebrovascular_diseases,
+          d.alzheimers,
+          d.diabetes,
+          d.influenza_pneumonia,
         ])
       ),
     ])
@@ -222,6 +232,16 @@ function handleResize(data) {
           d.natural_deaths,
           d.covid_19_multiple,
           d.covid_19_underlying,
+          d.drug_overdose,
+          d.homicide,
+          d.suicide,
+          d.vehicle_accidents,
+          d.unintentional_injuries,
+          d.heart_diseases,
+          d.cerebrovascular_diseases,
+          d.alzheimers,
+          d.diabetes,
+          d.influenza_pneumonia,
         ])
       ),
     ])
