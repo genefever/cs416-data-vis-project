@@ -288,12 +288,12 @@ function setupChart(data) {
     .attr('height', height)
     .style('opacity', 0) // Initially hide the overlay
     .on('mouseover', function () {
-      tooltip.style('opacity', 1) // Show the tooltip when mouseover occurs
+      tooltip.classed('show', true) // Add the 'show' class to display the tooltip smoothly
       bounds.selectAll('circle').style('opacity', 1) // Show all circles when mouseover occurs
       verticalLine.style('opacity', 1) // Show the vertical line when mouseover occurs
     })
     .on('mouseout', function () {
-      tooltip.style('opacity', 0) // Hide the tooltip when mouseout occurs
+      tooltip.classed('show', false) // Remove the 'show' class to hide the tooltip smoothly
       bounds.selectAll('circle').style('opacity', 0) // Hide all circles when mouseout occurs
       verticalLine.style('opacity', 0) // Hide the vertical line when mouseout occurs
     })
@@ -310,8 +310,8 @@ function setupChart(data) {
       tooltip
         .style('left', x + 'px')
         .style('top', y + 'px')
-        .style('opacity', 1) // Show the tooltip when mouseover occurs
         .html(tooltipHtml)
+        .classed('show', true)
 
       // Show circles for each data key when mouseover occurs
       dataKeys.forEach((key) => {
