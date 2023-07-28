@@ -123,13 +123,18 @@ function setupChart(data) {
     .style('text-anchor', 'middle')
     .text('Number of Deaths')
 
-  // Add circle for the "hovered" point
-  const circle = bounds
-    .append('circle')
-    .attr('class', 'hover-circle')
-    .attr('r', 7)
-    .style('fill', 'red')
-    .style('opacity', 0) // Initially hide the circle
+  // Append circles for each data key when mouseover occurs
+  dataKeys.forEach((key, index) => {
+    bounds
+      .selectAll(`.${key}-circle`)
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('class', `${key}-circle`)
+      .attr('r', 4)
+      .attr('fill', dataColors[index])
+      .style('opacity', 0) // Initially hide the circles
+  })
 
   // Add vertical line
   const verticalLine = bounds
@@ -162,6 +167,7 @@ function setupChart(data) {
       circle.style('opacity', 0) // Hide the circle when mouseout occurs
       verticalLine.style('opacity', 0) // Hide the vertical line when mouseout occurs
     })
+
     .on('mousemove', function (event) {
       const [x, y] = d3.pointer(event, this)
       const date = xScale.invert(x)
@@ -176,9 +182,10 @@ function setupChart(data) {
 
       // Build the tooltip HTML content with colored circles
       let tooltipHtml = `<strong>${formattedDate}</strong><br>`
-      dataKeys.forEach((key, index) => {
+      dataKeys.forEach((key, dataIndex) => {
+        // Use a different variable for the loop
         const formattedValue = formatDeaths(datapoint[key])
-        const lineColor = dataColors[index]
+        const lineColor = dataColors[dataIndex]
         tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
                       <circle cx="5" cy="5" r="5" fill="${lineColor}" />
                     </svg>
@@ -192,11 +199,19 @@ function setupChart(data) {
         .style('opacity', 1) // Show the tooltip when mouseover occurs
         .html(tooltipHtml)
 
-      const closestDataPoint = data[index]
-      const closestXValue = xScale(closestDataPoint.date)
-      const closestYValue = yScale(closestDataPoint.all_deaths)
+      // Show circles for each data key when mouseover occurs
+      dataKeys.forEach((key, dataIndex) => {
+        const circle = bounds.select(`.${key}-circle`)
 
-      circle.attr('cx', closestXValue).attr('cy', closestYValue) // Update circle position
+        const closestDataPoint = data[index]
+        const closestXValue = xScale(closestDataPoint.date)
+        const closestYValue = yScale(closestDataPoint[key])
+
+        circle
+          .attr('cx', closestXValue)
+          .attr('cy', closestYValue)
+          .style('opacity', 1)
+      })
 
       verticalLine
         .attr('x1', closestXValue)
