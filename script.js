@@ -180,14 +180,18 @@ function setupChart(data) {
 
       // Build the tooltip HTML content with colored circles
       let tooltipHtml = `<strong>${formattedDate}</strong><br>`
-      dataKeys.forEach((key, dataIndex) => {
+      // Sort dataKeys based on the values of the current datapoint
+      const sortedKeys = dataKeys
+        .slice()
+        .sort((a, b) => datapoint[b] - datapoint[a])
+      sortedKeys.forEach((key) => {
         const formattedValue = formatDeaths(datapoint[key])
-        const lineColor = dataColors[dataIndex]
+        const lineColor = dataColors[dataKeys.indexOf(key)]
         tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                    </svg>
-                    <span class="key">${key}:</span>
-                    <span class="value">${formattedValue}</span><br>`
+                        <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                      </svg>
+                      <span class="key">${key} </span>
+                      <span class="value">${formattedValue}</span><br>`
       })
 
       tooltip
@@ -197,7 +201,7 @@ function setupChart(data) {
         .html(tooltipHtml)
 
       // Show circles for each data key when mouseover occurs
-      dataKeys.forEach((key, dataIndex) => {
+      dataKeys.forEach((key) => {
         const circle = bounds.select(`.${key}-circle`)
         const closestDataPoint = data[index]
         const closestXValue = xScale(closestDataPoint.date)
