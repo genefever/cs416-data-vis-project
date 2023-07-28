@@ -175,12 +175,19 @@ function setupChart(data) {
       const formattedDate = formatDate(datapoint.date)
 
       const formatDeaths = d3.format(',')
-      const formattedDeaths = formatDeaths(datapoint.all_deaths)
+
+      // Build the tooltip HTML content
+      let tooltipHtml = `<strong>${formattedDate}</strong><br>`
+      dataKeys.forEach((key) => {
+        const formattedValue = formatDeaths(datapoint[key])
+        tooltipHtml += `${key}: ${formattedValue}<br>`
+      })
 
       tooltip
         .style('left', x + 'px')
         .style('top', y + 'px')
-        .html(`<strong>${formattedDate}</strong><br>Deaths: ${formattedDeaths}`)
+        .style('opacity', 1) // Show the tooltip when mouseover occurs
+        .html(tooltipHtml)
 
       const closestDataPoint = data[index]
       const closestXValue = xScale(closestDataPoint.date)

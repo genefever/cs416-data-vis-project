@@ -26,10 +26,14 @@ body {
   font-size: 12px;
   padding: 8px;
   z-index: 9999;
-  text-align: center;
+  text-align: left;
   max-width: 200px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   pointer-events: none; /* Prevent the tooltip from interfering with mouse events */
+}
+
+#tooltip strong {
+  display: block;
 }
 
 #tooltip::before {
