@@ -9,12 +9,33 @@
   <body>
     <h1>Monthly Provisional Counts of Deaths by Select Causes (2020-2023)</h1>
 
-    <!-- Move the checkbox inside the chart container -->
     <div id="chart" class="chart-container">
-      <input type="checkbox" id="show-all-data" class="checkbox" />
-      <label for="show-all-data" class="checkbox-label"
-        >Show all data in tooltip</label
-      >
+      <div class="tooltip-options">
+        <input
+          type="radio"
+          id="show-all-data"
+          name="tooltip-option"
+          value="show-all-data"
+          checked
+        />
+        <label for="show-all-data">Show all data in tooltip</label>
+        <br />
+        <input
+          type="radio"
+          id="show-top-4-data"
+          name="tooltip-option"
+          value="show-top-4-data"
+        />
+        <label for="show-top-4-data">Show the top 4 data in tooltip</label>
+        <br />
+        <input
+          type="radio"
+          id="show-cause-data"
+          name="tooltip-option"
+          value="show-cause-data"
+        />
+        <label for="show-cause-data">Show only the specific data in ti</label>
+      </div>
     </div>
 
     <!-- Add a tooltip container -->

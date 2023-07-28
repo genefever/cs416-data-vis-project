@@ -39,15 +39,15 @@ const lineGenerator = (key) =>
     .x((d) => xScale(d.date))
     .y((d) => yScale(d[key]))
 
-// Function to update tooltip content based on the current display mode
-function updateTooltipContent(datapoint, showAllData) {
+// Function to update tooltip content based on the selected display mode
+function updateTooltipContent(datapoint, displayMode) {
   const formatDate = d3.timeFormat('%B %Y')
   const formattedDate = formatDate(datapoint.date)
   const formatDeaths = d3.format(',')
 
   // Build the tooltip HTML content with colored circles
   let tooltipHtml = `<strong>${formattedDate}</strong><br>`
-  if (showAllData) {
+  if (displayMode === 'show-all-data') {
     // Show all data keys in the tooltip
     dataKeys.forEach((key) => {
       const formattedValue = formatDeaths(datapoint[key])
@@ -58,7 +58,7 @@ function updateTooltipContent(datapoint, showAllData) {
                     <span class="key">${key} </span>
                     <span class="value">${formattedValue}</span><br>`
     })
-  } else {
+  } else if (displayMode === 'show-top-4-data') {
     // Show only the top data keys in the tooltip
     const sortedKeys = dataKeys
       .slice()
@@ -73,6 +73,18 @@ function updateTooltipContent(datapoint, showAllData) {
                     <span class="key">${key} </span>
                     <span class="value">${formattedValue}</span><br>`
     })
+  } else if (displayMode === 'show-cause-data') {
+    // Show data specific to the cause (line) that the user is hovering over
+    const activeLine = dataKeys.find((key) => lineVisibility[key])
+    if (activeLine) {
+      const formattedValue = formatDeaths(datapoint[activeLine])
+      const lineColor = dataColors[dataKeys.indexOf(activeLine)]
+      tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
+                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                    </svg>
+                    <span class="key">${activeLine} </span>
+                    <span class="value">${formattedValue}</span><br>`
+    }
   }
 
   return tooltipHtml

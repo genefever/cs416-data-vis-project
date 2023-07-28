@@ -64,13 +64,13 @@ body {
   border-top: 5px solid #ccc; /* Change to border-top to create a pointer at the bottom */
 }
 
-.chart-container .checkbox {
+.chart-container .radio {
   position: absolute;
   top: 10px;
   left: 10px;
 }
 
-.chart-container .checkbox-label {
+.chart-container .radio-label {
   position: absolute;
   top: 12px;
   left: 30px;
