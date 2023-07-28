@@ -43,7 +43,7 @@ function setupChart(data) {
   // Set up the SVG container
   const wrapper = d3.select('#chart').append('svg') // Append instead of select
   const bounds = wrapper.append('g') // Append instead of select
-  const margin = { top: 50, right: 30, bottom: 120, left: 50 }
+  const margin = { top: 50, right: 30, bottom: 175, left: 50 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
@@ -117,7 +117,7 @@ function setupChart(data) {
     .append('text')
     .attr('class', 'x-axis-label')
     .attr('x', width / 2)
-    .attr('y', height + margin.bottom - 70)
+    .attr('y', height + margin.bottom - 120)
     .style('text-anchor', 'middle')
     .text('Time in Months')
 
@@ -130,6 +130,52 @@ function setupChart(data) {
     .attr('dy', '1em')
     .style('text-anchor', 'middle')
     .text('Number of Deaths')
+
+  // Append the legend
+  const legend = bounds
+    .append('g')
+    .attr('class', 'legend')
+    .attr('transform', `translate(0, ${height + margin.bottom + 30})`) // Position the legend with extra spacing
+
+  const legendItemWidth = 250 // Adjust this value based on your preference
+  const legendItemsPerRow = Math.floor(width / legendItemWidth)
+
+  const legendKeys = legend
+    .selectAll('.legend-key')
+    .data(dataKeys)
+    .enter()
+    .append('g')
+    .attr('class', 'legend-key')
+    .attr('transform', (d, i) => {
+      const row = Math.floor(i / legendItemsPerRow)
+      const col = i % legendItemsPerRow
+      const xOffset = col * legendItemWidth
+      const yOffset = row * 20 // Adjust this value based on your preference
+      return `translate(${xOffset}, ${yOffset})`
+    })
+
+  legendKeys
+    .append('rect')
+    .attr('width', 10)
+    .attr('height', 10)
+    .attr('fill', (d, i) => dataColors[i])
+
+  legendKeys
+    .append('text')
+    .attr('x', 18) // Space between the rectangle and text
+    .attr('y', 9) // Vertical alignment
+    .text((d) => d)
+
+  // Calculate the total height of the legend
+  const legendHeight = Math.ceil(dataKeys.length / legendItemsPerRow) * 20
+
+  // Position the legend horizontally centered
+  const legendXOffset =
+    (width - Math.min(legendItemWidth * legendItemsPerRow, width)) / 2
+  legend.attr(
+    'transform',
+    `translate(${legendXOffset}, ${height + margin.bottom - legendHeight - 30})`
+  )
 
   // Append circles for each data key when mouseover occurs
   dataKeys.forEach((key, index) => {
