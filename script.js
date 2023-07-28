@@ -39,6 +39,45 @@ const lineGenerator = (key) =>
     .x((d) => xScale(d.date))
     .y((d) => yScale(d[key]))
 
+// Function to update tooltip content based on the current display mode
+function updateTooltipContent(datapoint, showAllData) {
+  const formatDate = d3.timeFormat('%B %Y')
+  const formattedDate = formatDate(datapoint.date)
+  const formatDeaths = d3.format(',')
+
+  // Build the tooltip HTML content with colored circles
+  let tooltipHtml = `<strong>${formattedDate}</strong><br>`
+  if (showAllData) {
+    // Show all data keys in the tooltip
+    dataKeys.forEach((key) => {
+      const formattedValue = formatDeaths(datapoint[key])
+      const lineColor = dataColors[dataKeys.indexOf(key)]
+      tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
+                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                    </svg>
+                    <span class="key">${key} </span>
+                    <span class="value">${formattedValue}</span><br>`
+    })
+  } else {
+    // Show only the top data keys in the tooltip
+    const sortedKeys = dataKeys
+      .slice()
+      .sort((a, b) => datapoint[b] - datapoint[a])
+    const topKeys = sortedKeys.slice(0, 4) // Limit to the top 4 data keys
+    topKeys.forEach((key) => {
+      const formattedValue = formatDeaths(datapoint[key])
+      const lineColor = dataColors[dataKeys.indexOf(key)]
+      tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
+                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                    </svg>
+                    <span class="key">${key} </span>
+                    <span class="value">${formattedValue}</span><br>`
+    })
+  }
+
+  return tooltipHtml
+}
+
 // Function to set up the chart with data
 function setupChart(data) {
   // Set up the SVG container
@@ -245,26 +284,8 @@ function setupChart(data) {
       const index = bisect(data, date)
       const datapoint = data[index]
 
-      const formatDate = d3.timeFormat('%B %Y')
-      const formattedDate = formatDate(datapoint.date)
-
-      const formatDeaths = d3.format(',')
-
-      // Build the tooltip HTML content with colored circles
-      let tooltipHtml = `<strong>${formattedDate}</strong><br>`
-      // Sort dataKeys based on the values of the current datapoint
-      const sortedKeys = dataKeys
-        .slice()
-        .sort((a, b) => datapoint[b] - datapoint[a])
-      sortedKeys.forEach((key) => {
-        const formattedValue = formatDeaths(datapoint[key])
-        const lineColor = dataColors[dataKeys.indexOf(key)]
-        tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                        <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                      </svg>
-                      <span class="key">${key} </span>
-                      <span class="value">${formattedValue}</span><br>`
-      })
+      const showAllData = d3.select('#show-all-data').property('checked')
+      const tooltipHtml = updateTooltipContent(datapoint, showAllData)
 
       tooltip
         .style('left', x + 'px')
