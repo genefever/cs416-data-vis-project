@@ -15,6 +15,22 @@ const dataKeys = [
   'diabetes',
   'influenza_pneumonia',
 ]
+const dataColors = [
+  'red',
+  'green',
+  'blue',
+  'orange',
+  'purple',
+  'gray',
+  'black',
+  'olive',
+  'stateblue',
+  'goldenroad',
+  'darkcyan',
+  'darkmagenta',
+  '"khaki"',
+  'sienna',
+]
 
 // Function to set up the chart with data
 function setupChart(data) {
@@ -83,25 +99,7 @@ function setupChart(data) {
       .join('path')
       .attr('class', `${key}-line line`)
       .attr('fill', 'none')
-      .attr(
-        'stroke',
-        [
-          'red',
-          'green',
-          'blue',
-          'orange',
-          'purple',
-          'gray',
-          'black',
-          'olive',
-          'stateblue',
-          'goldenroad',
-          'darkcyan',
-          'darkmagenta',
-          '"khaki"',
-          'sienna',
-        ][index]
-      )
+      .attr('stroke', dataColors[index])
       .attr('d', line)
   })
 
@@ -176,11 +174,15 @@ function setupChart(data) {
 
       const formatDeaths = d3.format(',')
 
-      // Build the tooltip HTML content
+      // Build the tooltip HTML content with colored circles
       let tooltipHtml = `<strong>${formattedDate}</strong><br>`
-      dataKeys.forEach((key) => {
+      dataKeys.forEach((key, index) => {
         const formattedValue = formatDeaths(datapoint[key])
-        tooltipHtml += `${key}: ${formattedValue}<br>`
+        const lineColor = dataColors[index]
+        tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
+                          <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                        </svg>
+                        ${key}: ${formattedValue}<br>`
       })
 
       tooltip
