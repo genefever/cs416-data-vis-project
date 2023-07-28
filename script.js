@@ -231,8 +231,8 @@ function setupChart(data) {
     const isVisible =
       lineVisibility[key] === undefined ? true : !lineVisibility[key]
     const newOpacity = isVisible ? 1 : 0
-    line.style('opacity', newOpacity)
-    circle.style('opacity', newOpacity)
+    line.transition().duration(250).style('opacity', newOpacity)
+    circle.transition().duration(250).style('opacity', newOpacity)
 
     // Update the line visibility status in the object
     lineVisibility[key] = isVisible
