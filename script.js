@@ -1,3 +1,4 @@
+let lineVisibility = {} // Object to keep track of line visibility status
 const parseDate = d3.timeParse('%m/%d/%Y')
 const dataKeys = [
   'all_deaths',
@@ -135,7 +136,7 @@ function setupChart(data) {
   const legend = bounds
     .append('g')
     .attr('class', 'legend')
-    .attr('transform', `translate(0, ${height + margin.bottom + 30})`) // Position the legend with extra spacing
+    .attr('transform', `translate(0, ${height + margin.bottom + 30})`)
 
   const legendItemWidth = 250 // Adjust this value based on your preference
   const legendItemsPerRow = Math.floor(width / legendItemWidth)
@@ -165,6 +166,22 @@ function setupChart(data) {
     .attr('x', 18) // Space between the rectangle and text
     .attr('y', 9) // Vertical alignment
     .text((d) => d)
+
+  // Add click event listener to each legend item to toggle visibility
+  legendKeys.on('click', (event, key) => {
+    const line = bounds.select(`.${key}-line`)
+    const circle = bounds.selectAll(`.${key}-circle`)
+
+    // Toggle the visibility of the line and circle
+    const isVisible =
+      lineVisibility[key] === undefined ? true : !lineVisibility[key]
+    const newOpacity = isVisible ? 1 : 0
+    line.style('opacity', newOpacity)
+    circle.style('opacity', newOpacity)
+
+    // Update the line visibility status in the object
+    lineVisibility[key] = isVisible
+  })
 
   // Calculate the total height of the legend
   const legendHeight = Math.ceil(dataKeys.length / legendItemsPerRow) * 20
@@ -332,10 +349,17 @@ function handleResize(data) {
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
 
   // Update the lines on resize
-  dataKeys.forEach((key, index) => {
+  dataKeys.forEach((key) => {
     const line = lineGenerator(key)
+    const isVisible =
+      lineVisibility[key] === undefined ? true : lineVisibility[key]
 
-    bounds.selectAll(`.${key}-line`).attr('d', line)
+    bounds
+      .selectAll(`.${key}-line`)
+      .attr('d', line)
+      .style('opacity', isVisible ? 1 : 0)
+
+    bounds.selectAll(`.${key}-circle`).style('opacity', isVisible ? 1 : 0)
   })
 
   // Update x-axis label position
