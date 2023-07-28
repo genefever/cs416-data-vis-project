@@ -229,7 +229,7 @@ function setupChart(data) {
 
     // Toggle the visibility of the line and circle
     const isVisible =
-      lineVisibility[key] === undefined ? true : !lineVisibility[key]
+      lineVisibility[key] === undefined ? false : !lineVisibility[key]
     const newOpacity = isVisible ? 1 : 0
     line.transition().duration(250).style('opacity', newOpacity)
     circle.transition().duration(250).style('opacity', newOpacity)
@@ -407,7 +407,7 @@ function handleResize(data) {
   bounds
     .select('.x-axis-label')
     .attr('x', width / 2)
-    .attr('y', height + margin.bottom - 10) // Adjust the y position as needed
+    .attr('y', height + margin.bottom - 30) // Adjust the y position as needed
 
   // Update legend position
   const legendItemsPerRow = 4

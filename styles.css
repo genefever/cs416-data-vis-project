@@ -81,6 +81,10 @@ body {
   display: flex;
   align-items: center;
   margin-right: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  padding: 5px 10px;
+  border-radius: 4px;
 }
 
 .legend-key rect {
@@ -96,6 +100,10 @@ body {
 .legend-key.hidden rect {
   fill: #f0f0f0;
   stroke: #ccc;
+}
+
+.legend-key:hover {
+  background-color: #f0f0f0;
 }
 
 .overlay {
