@@ -81,9 +81,10 @@ function updateTooltipContent(datapoint, showAllData) {
 // Function to set up the chart with data
 function setupChart(data) {
   // Set up the SVG container
-  const wrapper = d3.select('#chart').append('svg') // Append instead of select
+  const chartContainer = d3.select('#chart')
+  const wrapper = chartContainer.append('svg') // Append instead of select
   const bounds = wrapper.append('g') // Append instead of select
-  const margin = { top: 50, right: 30, bottom: 175, left: 50 }
+  const margin = { top: 50, right: 30, bottom: 175, left: 120 } // Adjust the left margin to make space for the checkbox
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
@@ -98,6 +99,21 @@ function setupChart(data) {
     )
 
   bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+  // Append the checkbox
+  const checkbox = chartContainer.select('.checkbox')
+  const checkboxLabel = chartContainer.select('.checkbox-label')
+
+  // Position the checkbox to the top left of the y-axis
+  checkbox
+    .style('position', 'absolute')
+    .style('top', '10px')
+    .style('left', '10px')
+
+  checkboxLabel
+    .style('position', 'absolute')
+    .style('top', '12px')
+    .style('left', '30px')
 
   // Set up scales
   xScale = d3
