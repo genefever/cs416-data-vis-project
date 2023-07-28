@@ -180,9 +180,10 @@ function setupChart(data) {
         const formattedValue = formatDeaths(datapoint[key])
         const lineColor = dataColors[index]
         tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                          <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                        </svg>
-                        ${key}: ${formattedValue}<br>`
+                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                    </svg>
+                    <span class="key">${key}:</span>
+                    <span class="value">${formattedValue}</span><br>`
       })
 
       tooltip

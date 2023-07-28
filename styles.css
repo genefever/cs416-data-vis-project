@@ -36,6 +36,14 @@ body {
   display: block;
 }
 
+#tooltip .key {
+  font-weight: bold;
+}
+
+#tooltip .value {
+  float: right;
+}
+
 #tooltip::before {
   content: '';
   position: absolute;
