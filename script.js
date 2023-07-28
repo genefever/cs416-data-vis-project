@@ -47,44 +47,78 @@ function updateTooltipContent(datapoint, displayMode) {
 
   // Build the tooltip HTML content with colored circles
   let tooltipHtml = `<strong>${formattedDate}</strong><br>`
-  if (displayMode === 'show-all-data') {
-    // Show all data keys in the tooltip
-    dataKeys.forEach((key) => {
-      const formattedValue = formatDeaths(datapoint[key])
-      const lineColor = dataColors[dataKeys.indexOf(key)]
-      tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                    </svg>
-                    <span class="key">${key} </span>
-                    <span class="value">${formattedValue}</span><br>`
-    })
-  } else if (displayMode === 'show-top-4-data') {
-    // Show only the top data keys in the tooltip
-    const sortedKeys = dataKeys
-      .slice()
-      .sort((a, b) => datapoint[b] - datapoint[a])
-    const topKeys = sortedKeys.slice(0, 4) // Limit to the top 4 data keys
+
+  // Add all_deaths value to the tooltip with a separator and highlight it
+  const allDeathsValue = formatDeaths(datapoint['all_deaths'])
+  tooltipHtml += `
+  <div class="all-deaths">
+  <strong>
+    <span class="label">Total Deaths</span>
+    <span class="value">${allDeathsValue}</span>
+    </strong>
+  </div>
+  <hr/>
+`
+
+  // Sort the dataKeys array by the corresponding data values
+  const sortedKeys = dataKeys
+    .slice()
+    .sort((a, b) => datapoint[b] - datapoint[a])
+
+  if (displayMode === 'show-top-4-data') {
+    // Limit to the top 3 data keys and exclude 'all_deaths' from the sorted keys
+    const topKeys = sortedKeys.slice(0, 4).filter((key) => key !== 'all_deaths')
+
     topKeys.forEach((key) => {
       const formattedValue = formatDeaths(datapoint[key])
       const lineColor = dataColors[dataKeys.indexOf(key)]
       tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                    </svg>
-                    <span class="key">${key} </span>
-                    <span class="value">${formattedValue}</span><br>`
+                  <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                </svg>
+                <span class="key">${key} </span>
+                <span class="value">${formattedValue}</span><br>`
     })
   } else if (displayMode === 'show-cause-data') {
     // Show data specific to the cause (line) that the user is hovering over
     const activeLine = dataKeys.find((key) => lineVisibility[key])
-    if (activeLine) {
-      const formattedValue = formatDeaths(datapoint[activeLine])
-      const lineColor = dataColors[dataKeys.indexOf(activeLine)]
-      tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
+    if (activeLine && activeLine !== 'all_deaths') {
+      // Get the index of activeLine in the sortedKeys array
+      const activeLineIndex = sortedKeys.indexOf(activeLine)
+
+      // Extract the keys before and after the activeLine based on its index
+      const keysBeforeActiveLine = sortedKeys.slice(0, activeLineIndex)
+      const keysAfterActiveLine = sortedKeys.slice(activeLineIndex + 1)
+
+      // Combine the keys in the order: keysAfterActiveLine, activeLine, keysBeforeActiveLine
+      const keysToShow = [
+        ...keysAfterActiveLine,
+        activeLine,
+        ...keysBeforeActiveLine,
+      ]
+
+      keysToShow.forEach((key) => {
+        const formattedValue = formatDeaths(datapoint[key])
+        const lineColor = dataColors[dataKeys.indexOf(key)]
+        tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
+                    <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+                  </svg>
+                  <span class="key">${key} </span>
+                  <span class="value">${formattedValue}</span><br>`
+      })
+    }
+  } else {
+    // Show all data keys except 'all_deaths' in the tooltip using sortedKeys
+    sortedKeys.forEach((key) => {
+      if (key !== 'all_deaths') {
+        const formattedValue = formatDeaths(datapoint[key])
+        const lineColor = dataColors[dataKeys.indexOf(key)]
+        tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
                       <circle cx="5" cy="5" r="5" fill="${lineColor}" />
                     </svg>
-                    <span class="key">${activeLine} </span>
+                    <span class="key">${key} </span>
                     <span class="value">${formattedValue}</span><br>`
-    }
+      }
+    })
   }
 
   return tooltipHtml
@@ -94,9 +128,9 @@ function updateTooltipContent(datapoint, displayMode) {
 function setupChart(data) {
   // Set up the SVG container
   const chartContainer = d3.select('#chart')
-  const wrapper = chartContainer.append('svg') // Append instead of select
-  const bounds = wrapper.append('g') // Append instead of select
-  const margin = { top: 50, right: 30, bottom: 175, left: 120 } // Adjust the left margin to make space for the checkbox
+  const wrapper = chartContainer.append('svg')
+  const bounds = wrapper.append('g')
+  const margin = { top: 50, right: 30, bottom: 175, left: 120 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
@@ -112,20 +146,10 @@ function setupChart(data) {
 
   bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
-  // Append the checkbox
-  const checkbox = chartContainer.select('.checkbox')
-  const checkboxLabel = chartContainer.select('.checkbox-label')
-
-  // Position the checkbox to the top left of the y-axis
-  checkbox
-    .style('position', 'absolute')
-    .style('top', '10px')
-    .style('left', '10px')
-
-  checkboxLabel
-    .style('position', 'absolute')
-    .style('top', '12px')
-    .style('left', '30px')
+  // Append the radio buttons inside the chart container
+  const radioContainer = chartContainer
+    .append('div')
+    .attr('class', 'radio-container')
 
   // Set up scales
   xScale = d3
@@ -316,8 +340,12 @@ function setupChart(data) {
       const index = bisect(data, date)
       const datapoint = data[index]
 
-      const showAllData = d3.select('#show-all-data').property('checked')
-      const tooltipHtml = updateTooltipContent(datapoint, showAllData)
+      // Get the selected display mode from the radio buttons
+      const displayMode = d3
+        .select('input[name="tooltip-option"]:checked')
+        .node().value
+
+      const tooltipHtml = updateTooltipContent(datapoint, displayMode)
 
       tooltip
         .style('left', x + 'px')
