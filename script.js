@@ -1,28 +1,13 @@
 const parseDate = d3.timeParse('%m/%d/%Y')
-let data = []
 
-function processData(csvData) {
-  data = csvData.map((d) => ({
-    date: parseDate(d['End Date']),
-    all_deaths: +d['All Cause'],
-    natural_deaths: +d['Natural Cause'],
-    covid_19_multiple: +d['COVID-19 (Multiple Cause of Death)'],
-    covid_19_underlying: +d['COVID-19 (Underlying Cause of Death)'],
-  }))
-
-  if (data.length === 0) {
-    console.error('Empty data array')
-    return
-  }
-}
-
-function setupChart() {
+// Function to set up the chart with data
+function setupChart(data) {
   // Set up the SVG container
-  const wrapper = d3.select('#chart').append('svg')
-  const bounds = wrapper.append('g')
+  const wrapper = d3.select('#chart').append('svg') // Append instead of select
+  const bounds = wrapper.append('g') // Append instead of select
   const margin = { top: 20, right: 30, bottom: 30, left: 50 }
-  let width = window.innerWidth - margin.left - margin.right
-  let height = window.innerHeight - margin.top - margin.bottom
+  const width = window.innerWidth - margin.left - margin.right
+  const height = window.innerHeight - margin.top - margin.bottom
 
   wrapper
     .attr('width', '100%')
@@ -56,55 +41,32 @@ function setupChart() {
     ])
     .range([height, 0])
 
-  // Set up line generators
-  const lineAllDeaths = d3
-    .line()
-    .x((d) => xScale(d.date))
-    .y((d) => yScale(d.all_deaths))
+  // Append the lines dynamically based on data keys
+  const lineGenerator = (key, strokeColor) =>
+    d3
+      .line()
+      .x((d) => xScale(d.date))
+      .y((d) => yScale(d[key]))
 
-  const lineNaturalDeaths = d3
-    .line()
-    .x((d) => xScale(d.date))
-    .y((d) => yScale(d.natural_deaths))
+  const dataKeys = [
+    'all_deaths',
+    'natural_deaths',
+    'covid_19_multiple',
+    'covid_19_underlying',
+  ]
 
-  const lineCovidMultiple = d3
-    .line()
-    .x((d) => xScale(d.date))
-    .y((d) => yScale(d.covid_19_multiple))
+  dataKeys.forEach((key, index) => {
+    const line = lineGenerator(key)
 
-  const lineCovidUnderlying = d3
-    .line()
-    .x((d) => xScale(d.date))
-    .y((d) => yScale(d.covid_19_underlying))
-
-  // Append the lines
-  bounds
-    .append('path')
-    .datum(data)
-    .attr('fill', 'none')
-    .attr('stroke', 'red')
-    .attr('d', lineAllDeaths)
-
-  bounds
-    .append('path')
-    .datum(data)
-    .attr('fill', 'none')
-    .attr('stroke', 'green')
-    .attr('d', lineNaturalDeaths)
-
-  bounds
-    .append('path')
-    .datum(data)
-    .attr('fill', 'none')
-    .attr('stroke', 'blue')
-    .attr('d', lineCovidMultiple)
-
-  bounds
-    .append('path')
-    .datum(data)
-    .attr('fill', 'none')
-    .attr('stroke', 'orange')
-    .attr('d', lineCovidUnderlying)
+    bounds
+      .selectAll(`.${key}-line`)
+      .data([data])
+      .join('path')
+      .attr('class', `${key}-line line`)
+      .attr('fill', 'none')
+      .attr('stroke', ['red', 'green', 'blue', 'orange'][index]) // Set the stroke color here
+      .attr('d', line)
+  })
 
   // Append x-axis
   bounds
@@ -198,12 +160,13 @@ function setupChart() {
 }
 
 // Function to handle window resize
-function handleResize() {
+function handleResize(data) {
   const wrapper = d3.select('#chart').select('svg')
   const bounds = wrapper.select('g')
 
-  width = window.innerWidth - margin.left - margin.right
-  height = window.innerHeight - margin.top - margin.bottom
+  const margin = { top: 20, right: 30, bottom: 30, left: 50 }
+  const width = window.innerWidth - margin.left - margin.right
+  const height = window.innerHeight - margin.top - margin.bottom
 
   wrapper
     .attr('width', '100%')
@@ -217,25 +180,82 @@ function handleResize() {
 
   bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
-  xScale.range([0, width])
-  yScale.range([height, 0])
+  // Update scales with new data range
+  const xScale = d3
+    .scaleTime()
+    .domain(d3.extent(data, (d) => d.date))
+    .range([0, width])
+  const yScale = d3
+    .scaleLinear()
+    .domain([
+      0,
+      d3.max(data, (d) =>
+        d3.max([
+          d.all_deaths,
+          d.natural_deaths,
+          d.covid_19_multiple,
+          d.covid_19_underlying,
+        ])
+      ),
+    ])
+    .range([height, 0])
 
   bounds
     .select('.x-axis')
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
-  bounds.selectAll('path').attr('d', (line) => line(data))
+
+  // Update the lines on resize
+  const lineGenerator = (key) =>
+    d3
+      .line()
+      .x((d) => xScale(d.date))
+      .y((d) => yScale(d[key]))
+
+  const dataKeys = [
+    'all_deaths',
+    'natural_deaths',
+    'covid_19_multiple',
+    'covid_19_underlying',
+  ]
+
+  dataKeys.forEach((key, index) => {
+    const line = lineGenerator(key)
+
+    bounds.selectAll(`.${key}-line`).attr('d', line)
+  })
 }
 
-// Call handleResize on window resize event
-window.addEventListener('resize', handleResize)
+// Function to parse and process data
+function processData(csvData) {
+  const data = csvData.map((d) => ({
+    date: parseDate(d['End Date']),
+    all_deaths: +d['All Cause'],
+    natural_deaths: +d['Natural Cause'],
+    covid_19_multiple: +d['COVID-19 (Multiple Cause of Death)'],
+    covid_19_underlying: +d['COVID-19 (Underlying Cause of Death)'],
+  }))
 
-d3.csv('data_deaths_2020_2023.csv')
-  .then(processData)
-  .then(setupChart)
-  .catch((error) => {
-    console.error('Error loading CSV data:', error)
-  })
+  if (data.length === 0) {
+    console.error('Empty data array')
+    return []
+  }
 
-window.addEventListener('resize', handleResize)
+  return data
+}
+
+// Main function
+function main() {
+  d3.csv('data_deaths_2020_2023.csv')
+    .then(processData)
+    .then((data) => {
+      setupChart(data)
+      window.addEventListener('resize', () => handleResize(data))
+    })
+    .catch((error) => {
+      console.error('Error loading CSV data:', error)
+    })
+}
+
+main()
