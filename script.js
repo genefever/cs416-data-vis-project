@@ -236,6 +236,10 @@ function setupChart(data) {
 
     // Update the line visibility status in the object
     lineVisibility[key] = isVisible
+
+    // Update the legend item styling on click
+    const legendItem = legendKeys.filter((d) => d === key)
+    legendItem.classed('hidden', !isVisible)
   })
 
   // Calculate the total height of the legend

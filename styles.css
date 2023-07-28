@@ -93,6 +93,11 @@ body {
   font-size: 12px;
 }
 
+.legend-key.hidden rect {
+  fill: #f0f0f0;
+  stroke: #ccc;
+}
+
 .overlay {
   fill: none;
   pointer-events: all;
