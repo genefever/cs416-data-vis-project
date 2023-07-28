@@ -43,7 +43,7 @@ function setupChart(data) {
   // Set up the SVG container
   const wrapper = d3.select('#chart').append('svg') // Append instead of select
   const bounds = wrapper.append('g') // Append instead of select
-  const margin = { top: 20, right: 30, bottom: 30, left: 50 }
+  const margin = { top: 50, right: 30, bottom: 120, left: 50 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
@@ -111,6 +111,15 @@ function setupChart(data) {
 
   // Append y-axis
   bounds.append('g').attr('class', 'y-axis').call(d3.axisLeft(yScale))
+
+  // Append x-axis label
+  bounds
+    .append('text')
+    .attr('class', 'x-axis-label')
+    .attr('x', width / 2)
+    .attr('y', height + margin.bottom - 70)
+    .style('text-anchor', 'middle')
+    .text('Time in Months')
 
   // Append y-axis label
   bounds
