@@ -1,4 +1,20 @@
 const parseDate = d3.timeParse('%m/%d/%Y')
+const dataKeys = [
+  'all_deaths',
+  'natural_deaths',
+  'covid_19_multiple',
+  'covid_19_underlying',
+  'drug_overdose',
+  'homicide',
+  'suicide',
+  'vehicle_accidents',
+  'unintentional_injuries',
+  'heart_diseases',
+  'cerebrovascular_diseases',
+  'alzheimers',
+  'diabetes',
+  'influenza_pneumonia',
+]
 
 // Function to set up the chart with data
 function setupChart(data) {
@@ -48,13 +64,6 @@ function setupChart(data) {
       .x((d) => xScale(d.date))
       .y((d) => yScale(d[key]))
 
-  const dataKeys = [
-    'all_deaths',
-    'natural_deaths',
-    'covid_19_multiple',
-    'covid_19_underlying',
-  ]
-
   dataKeys.forEach((key, index) => {
     const line = lineGenerator(key)
 
@@ -64,7 +73,25 @@ function setupChart(data) {
       .join('path')
       .attr('class', `${key}-line line`)
       .attr('fill', 'none')
-      .attr('stroke', ['red', 'green', 'blue', 'orange'][index]) // Set the stroke color here
+      .attr(
+        'stroke',
+        [
+          'red',
+          'green',
+          'blue',
+          'orange',
+          'purple',
+          'gray',
+          'black',
+          'olive',
+          'stateblue',
+          'goldenroad',
+          'darkcyan',
+          'darkmagenta',
+          '"khaki"',
+          'sienna',
+        ][index]
+      )
       .attr('d', line)
   })
 
@@ -213,13 +240,6 @@ function handleResize(data) {
       .x((d) => xScale(d.date))
       .y((d) => yScale(d[key]))
 
-  const dataKeys = [
-    'all_deaths',
-    'natural_deaths',
-    'covid_19_multiple',
-    'covid_19_underlying',
-  ]
-
   dataKeys.forEach((key, index) => {
     const line = lineGenerator(key)
 
@@ -235,6 +255,17 @@ function processData(csvData) {
     natural_deaths: +d['Natural Cause'],
     covid_19_multiple: +d['COVID-19 (Multiple Cause of Death)'],
     covid_19_underlying: +d['COVID-19 (Underlying Cause of Death)'],
+    drug_overdose: +d['Drug Overdose'],
+    homicide: +d['Assault (Homicide)'],
+    suicide: +d['Intentional Self-Harm (Suicide)'],
+    vehicle_accidents: +d['Motor Vehicle Accidents'],
+    unintentional_injuries: +d['Accidents (Unintentional Injuries)'],
+    heart_diseases: +d['Diseases of Heart'],
+    cerebrovascular_diseases: +d['Cerebrovascular Diseases'],
+    alzheimers: +d['Alzheimer Disease'],
+    diabetes: +d['Diabetes Mellitus'],
+    influenza_pneumonia: +d['Influenza and Pneumonia'],
+    // new_data_column: +d['New Data Column'], // Add new data columns here
   }))
 
   if (data.length === 0) {
