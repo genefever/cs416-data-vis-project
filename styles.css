@@ -27,7 +27,7 @@ body {
   padding: 8px;
   z-index: 9999;
   text-align: left;
-  max-width: 200px;
+  max-width: 333px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   pointer-events: none;
 }
