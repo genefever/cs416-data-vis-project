@@ -32,7 +32,10 @@ const dataColors = [
   'khaki',
   'sienna',
 ]
-let xScale, yScale
+let xScale,
+  yScale,
+  activeDatapoint,
+  bounds = null
 const lineGenerator = (key) =>
   d3
     .line()
@@ -51,19 +54,19 @@ function updateTooltipContent(datapoint, displayMode) {
   // Add all_deaths value to the tooltip with a separator and highlight it
   const allDeathsValue = formatDeaths(datapoint['all_deaths'])
   tooltipHtml += `
-  <div class="all-deaths">
-  <strong>
-    <span class="label">Total Deaths</span>
-    <span class="value">${allDeathsValue}</span>
-    </strong>
-  </div>
-  <hr/>
-`
+    <div class="all-deaths">
+      <strong>
+        <span class="label">Total Deaths</span>
+        <span class="value">${allDeathsValue}</span>
+      </strong>
+    </div>
+    <hr/>
+  `
 
   // Sort the dataKeys array by the corresponding data values
   const sortedKeys = dataKeys
     .slice()
-    .sort((a, b) => datapoint[b] - datapoint[a])
+    .sort((a, b) => (a === 'all_deaths' ? -1 : datapoint[b] - datapoint[a]))
 
   if (displayMode === 'show-top-4-data') {
     // Limit to the top 3 data keys and exclude 'all_deaths' from the sorted keys
@@ -72,11 +75,13 @@ function updateTooltipContent(datapoint, displayMode) {
     topKeys.forEach((key) => {
       const formattedValue = formatDeaths(datapoint[key])
       const lineColor = dataColors[dataKeys.indexOf(key)]
-      tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                  <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                </svg>
-                <span class="key">${key} </span>
-                <span class="value">${formattedValue}</span><br>`
+      tooltipHtml += `
+        <svg height="10" width="10" style="vertical-align: middle;">
+          <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+        </svg>
+        <span class="key">${key} </span>
+        <span class="value">${formattedValue}</span><br>
+      `
     })
   } else if (displayMode === 'show-cause-data') {
     // Show data specific to the cause (line) that the user is hovering over
@@ -92,6 +97,7 @@ function updateTooltipContent(datapoint, displayMode) {
       // Combine the keys in the order: keysAfterActiveLine, activeLine, keysBeforeActiveLine
       const keysToShow = [
         ...keysAfterActiveLine,
+        'all_deaths', // Add 'all_deaths' to show the total deaths line
         activeLine,
         ...keysBeforeActiveLine,
       ]
@@ -99,11 +105,13 @@ function updateTooltipContent(datapoint, displayMode) {
       keysToShow.forEach((key) => {
         const formattedValue = formatDeaths(datapoint[key])
         const lineColor = dataColors[dataKeys.indexOf(key)]
-        tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                    <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                  </svg>
-                  <span class="key">${key} </span>
-                  <span class="value">${formattedValue}</span><br>`
+        tooltipHtml += `
+          <svg height="10" width="10" style="vertical-align: middle;">
+            <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+          </svg>
+          <span class="key">${key} </span>
+          <span class="value">${formattedValue}</span><br>
+        `
       })
     }
   } else {
@@ -112,11 +120,13 @@ function updateTooltipContent(datapoint, displayMode) {
       if (key !== 'all_deaths') {
         const formattedValue = formatDeaths(datapoint[key])
         const lineColor = dataColors[dataKeys.indexOf(key)]
-        tooltipHtml += `<svg height="10" width="10" style="vertical-align: middle;">
-                      <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-                    </svg>
-                    <span class="key">${key} </span>
-                    <span class="value">${formattedValue}</span><br>`
+        tooltipHtml += `
+          <svg height="10" width="10" style="vertical-align: middle;">
+            <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+          </svg>
+          <span class="key">${key} </span>
+          <span class="value">${formattedValue}</span><br>
+        `
       }
     })
   }
@@ -129,7 +139,7 @@ function setupChart(data) {
   // Set up the SVG container
   const chartContainer = d3.select('#chart')
   const wrapper = chartContainer.append('svg')
-  const bounds = wrapper.append('g')
+  bounds = wrapper.append('g')
   const margin = { top: 50, right: 30, bottom: 175, left: 120 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
@@ -340,11 +350,12 @@ function setupChart(data) {
       const index = bisect(data, date)
       const datapoint = data[index]
 
+      activeDatapoint = datapoint // Store the active datapoint for use in 'show-cause-data' display mode
+
       // Get the selected display mode from the radio buttons
       const displayMode = d3
         .select('input[name="tooltip-option"]:checked')
         .node().value
-
       const tooltipHtml = updateTooltipContent(datapoint, displayMode)
 
       tooltip
@@ -371,11 +382,13 @@ function setupChart(data) {
 }
 
 // Function to handle window resize
-function handleResize(data) {
-  bounds.select('.legend').selectAll('*').remove()
+function handleResize(data, event) {
+  if (bounds !== null) {
+    bounds.select('.legend').selectAll('*').remove()
+  }
 
   const wrapper = d3.select('#chart').select('svg')
-  const bounds = wrapper.select('g')
+  bounds = wrapper.select('g')
 
   const margin = { top: 20, right: 30, bottom: 60, left: 50 }
   const width = window.innerWidth - margin.left - margin.right
@@ -428,6 +441,13 @@ function handleResize(data) {
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
+
+  // Update the activeDatapoint when window resizes
+  const [x, y] = d3.pointer(event, this)
+  const date = xScale.invert(x)
+  const bisect = d3.bisector((d) => d.date).left
+  const index = bisect(data, date)
+  activeDatapoint = data[index]
 
   // Update the lines on resize
   dataKeys.forEach((key) => {
@@ -515,7 +535,6 @@ function processData(csvData) {
     alzheimers: +d['Alzheimer Disease'],
     diabetes: +d['Diabetes Mellitus'],
     influenza_pneumonia: +d['Influenza and Pneumonia'],
-    // new_data_column: +d['New Data Column'], // Add new data columns here
   }))
 
   if (data.length === 0) {
@@ -531,8 +550,32 @@ function main() {
   d3.csv('data_deaths_2020_2023.csv')
     .then(processData)
     .then((data) => {
+      // Initial setup of the chart
       setupChart(data)
-      window.addEventListener('resize', () => handleResize(data))
+
+      // Add event listener for radio buttons to update tooltip display mode
+      const radioButtons = document.querySelectorAll(
+        'input[name="tooltip-option"]'
+      )
+      radioButtons.forEach((radioButton) => {
+        radioButton.addEventListener('change', (event) => {
+          const displayMode = radioButton.value
+
+          // Update the activeDatapoint based on the current mouse position
+          const [x, y] = d3.pointer(event, bounds.select('.overlay').node())
+          const date = xScale.invert(x)
+          const bisect = d3.bisector((d) => d.date).left
+          const index = bisect(data, date)
+          activeDatapoint = data[index]
+
+          const tooltipHtml = updateTooltipContent(activeDatapoint, displayMode)
+          const tooltip = d3.select('#tooltip')
+          tooltip.html(tooltipHtml)
+        })
+      })
+
+      // Add window resize event listener
+      window.addEventListener('resize', (event) => handleResize(data, event))
     })
     .catch((error) => {
       console.error('Error loading CSV data:', error)
