@@ -1,4 +1,4 @@
-let lineVisibility = {} // Object to keep track of line visibility status
+let lineVisibility = {}
 const parseDate = d3.timeParse('%m/%d/%Y')
 const dataKeys = [
   'all_deaths',
@@ -32,11 +32,13 @@ const dataColors = [
   'khaki',
   'sienna',
 ]
+
 let xScale,
   yScale,
   activeDatapoint,
   bounds = null,
   activeLine = null
+
 const lineGenerator = (key) =>
   d3
     .line()
