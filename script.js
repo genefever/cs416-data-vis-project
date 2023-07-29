@@ -1,4 +1,3 @@
-let lineVisibility = {}
 const parseDate = d3.timeParse('%m/%d/%Y')
 const dataKeys = [
   'all_deaths',
@@ -32,10 +31,11 @@ const dataColors = [
   'khaki',
   'sienna',
 ]
-
+let lineVisibility = {}
 let xScale,
   yScale,
   activeDatapoint,
+  verticalLine,
   bounds = null,
   activeLine = null
 
@@ -104,6 +104,31 @@ function updateTooltipContent(datapoint, displayMode) {
   }
 
   return tooltipHtml
+}
+
+function toggleLineAndLegend(key) {
+  let isVisible = lineVisibility[key]
+
+  // Toggle the visibility of all lines and circles
+  dataKeys.forEach((dataKey) => {
+    const line = bounds.select(`.${dataKey}-line`)
+    const circle = bounds.selectAll(`.${dataKey}-circle`)
+    const newOpacity =
+      dataKey === key
+        ? isVisible
+          ? 1
+          : 0.2
+        : lineVisibility[dataKey]
+        ? 0.2
+        : 1
+    line.transition().duration(250).style('opacity', newOpacity)
+    circle.transition().duration(250).style('opacity', newOpacity)
+    lineVisibility[dataKey] = dataKey === key ? true : !lineVisibility[dataKey]
+  })
+
+  // Update the legend item styling
+  const legendItem = bounds.selectAll(`.${key}-legend-item`)
+  legendItem.classed('selected', isVisible)
 }
 
 // Function to set up the chart with data
@@ -248,24 +273,14 @@ function setupChart(data) {
     .attr('y', 9) // Vertical alignment
     .text((d) => d)
 
+  // Initialize the visibility status of each line to true
+  dataKeys.forEach((key) => {
+    lineVisibility[key] = true
+  })
+
   // Add click event listener to each legend item to toggle visibility
   legendKeys.on('click', (event, key) => {
-    const line = bounds.select(`.${key}-line`)
-    const circle = bounds.selectAll(`.${key}-circle`)
-
-    // Toggle the visibility of the line and circle
-    const isVisible =
-      lineVisibility[key] === undefined ? false : !lineVisibility[key]
-    const newOpacity = isVisible ? 1 : 0
-    line.transition().duration(250).style('opacity', newOpacity)
-    circle.transition().duration(250).style('opacity', newOpacity)
-
-    // Update the line visibility status in the object
-    lineVisibility[key] = isVisible
-
-    // Update the legend item styling on click
-    const legendItem = legendKeys.filter((d) => d === key)
-    legendItem.classed('hidden', !isVisible)
+    toggleLineAndLegend(key)
   })
 
   // Calculate the total height of the legend
@@ -293,7 +308,7 @@ function setupChart(data) {
   })
 
   // Add vertical line
-  const verticalLine = bounds
+  verticalLine = bounds
     .append('line')
     .attr('class', 'vertical-line')
     .attr('x1', 0)
@@ -323,40 +338,44 @@ function setupChart(data) {
       bounds.selectAll('circle').style('opacity', 0) // Hide all circles when mouseout occurs
       verticalLine.style('opacity', 0) // Hide the vertical line when mouseout occurs
     })
-    .on('mousemove', function (event) {
-      const [x, y] = d3.pointer(event, this)
-      const date = xScale.invert(x)
-      const bisect = d3.bisector((d) => d.date).left
-      const index = bisect(data, date)
-      const datapoint = data[index]
+}
 
-      // Get the selected display mode from the radio buttons
-      const displayMode = d3
-        .select('input[name="tooltip-option"]:checked')
-        .node().value
-      const tooltipHtml = updateTooltipContent(datapoint, displayMode)
+// Function to update tooltip content when mouse moves
+function handleMousemove(event, data) {
+  const [x, y] = d3.pointer(event, bounds.select('.overlay').node())
+  const date = xScale.invert(x)
+  const bisect = d3.bisector((d) => d.date).left
+  const index = bisect(data, date)
+  // Temp
+  const margin = { top: 50, right: 30, bottom: 175, left: 120 }
+  const height = window.innerHeight - margin.top - margin.bottom
+  activeDatapoint = data[index]
 
-      tooltip
-        .style('left', x + 'px')
-        .style('top', y + 'px')
-        .html(tooltipHtml)
-        .classed('show', true)
+  const displayMode = d3
+    .select('input[name="tooltip-option"]:checked')
+    .node().value
+  const tooltipHtml = updateTooltipContent(activeDatapoint, displayMode)
+  const tooltip = d3.select('#tooltip')
+  tooltip
+    .style('left', x + 'px')
+    .style('top', y + 'px')
+    .html(tooltipHtml)
+    .classed('show', true)
 
-      // Show circles for each data key when mouseover occurs
-      dataKeys.forEach((key) => {
-        const circle = bounds.select(`.${key}-circle`)
-        const closestDataPoint = data[index]
-        const closestXValue = xScale(closestDataPoint.date)
-        const closestYValue = yScale(closestDataPoint[key])
+  // Show circles for each data key when mouseover occurs
+  dataKeys.forEach((key) => {
+    const circle = bounds.select(`.${key}-circle`)
+    const closestDataPoint = data[index]
+    const closestXValue = xScale(closestDataPoint.date)
+    const closestYValue = yScale(closestDataPoint[key])
 
-        circle
-          .attr('cx', closestXValue)
-          .attr('cy', closestYValue)
-          .style('opacity', 1)
-      })
+    circle
+      .attr('cx', closestXValue)
+      .attr('cy', closestYValue)
+      .style('opacity', 1)
+  })
 
-      verticalLine.attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', height) // Update vertical line position
-    })
+  verticalLine.attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', height) // Update vertical line position
 }
 
 // Function to handle window resize
@@ -430,8 +449,7 @@ function handleResize(data, event) {
   // Update the lines on resize
   dataKeys.forEach((key) => {
     const line = lineGenerator(key)
-    const isVisible =
-      lineVisibility[key] === undefined ? true : lineVisibility[key]
+    const isVisible = lineVisibility[key]
 
     bounds
       .selectAll(`.${key}-line`)
@@ -442,6 +460,9 @@ function handleResize(data, event) {
       })
       .on('mouseout', () => {
         activeLine = null
+      })
+      .on('mousemove', (event) => {
+        handleMousemove(event, data)
       })
 
     bounds.selectAll(`.${key}-circle`).style('opacity', isVisible ? 1 : 0)
@@ -543,19 +564,13 @@ function main() {
       )
       radioButtons.forEach((radioButton) => {
         radioButton.addEventListener('change', (event) => {
-          const displayMode = radioButton.value
-
-          // Update the activeDatapoint based on the current mouse position
-          const [x, y] = d3.pointer(event, bounds.select('.overlay').node())
-          const date = xScale.invert(x)
-          const bisect = d3.bisector((d) => d.date).left
-          const index = bisect(data, date)
-          activeDatapoint = data[index]
-
-          const tooltipHtml = updateTooltipContent(activeDatapoint, displayMode)
-          const tooltip = d3.select('#tooltip')
-          tooltip.html(tooltipHtml)
+          handleMousemove(event, data)
         })
+      })
+
+      // Add mousemove event listener to update tooltip content when mouse moves
+      bounds.select('.overlay').on('mousemove', (event) => {
+        handleMousemove(event, data)
       })
 
       // Add window resize event listener

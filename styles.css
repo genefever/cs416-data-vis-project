@@ -103,6 +103,10 @@ body {
   font-size: 12px;
 }
 
+.legend-key.selected {
+  background-color: #f0f0f0;
+}
+
 .legend-key.hidden rect {
   fill: #f0f0f0;
   stroke: #ccc;
