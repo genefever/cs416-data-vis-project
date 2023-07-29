@@ -35,7 +35,8 @@ const dataColors = [
 let xScale,
   yScale,
   activeDatapoint,
-  bounds = null
+  bounds = null,
+  activeLine = null
 const lineGenerator = (key) =>
   d3
     .line()
@@ -72,48 +73,17 @@ function updateTooltipContent(datapoint, displayMode) {
     // Limit to the top 3 data keys and exclude 'all_deaths' from the sorted keys
     const topKeys = sortedKeys.slice(0, 4).filter((key) => key !== 'all_deaths')
 
-    topKeys.forEach((key) => {
-      const formattedValue = formatDeaths(datapoint[key])
-      const lineColor = dataColors[dataKeys.indexOf(key)]
+    topKeys.forEach((activeLine) => {
+      const formattedValue = formatDeaths(datapoint[activeLine])
+      const lineColor = dataColors[dataKeys.indexOf(activeLine)]
       tooltipHtml += `
         <svg height="10" width="10" style="vertical-align: middle;">
           <circle cx="5" cy="5" r="5" fill="${lineColor}" />
         </svg>
-        <span class="key">${key} </span>
+        <span class="key">${activeLine} </span>
         <span class="value">${formattedValue}</span><br>
       `
     })
-  } else if (displayMode === 'show-cause-data') {
-    // Show data specific to the cause (line) that the user is hovering over
-    const activeLine = dataKeys.find((key) => lineVisibility[key])
-    if (activeLine && activeLine !== 'all_deaths') {
-      // Get the index of activeLine in the sortedKeys array
-      const activeLineIndex = sortedKeys.indexOf(activeLine)
-
-      // Extract the keys before and after the activeLine based on its index
-      const keysBeforeActiveLine = sortedKeys.slice(0, activeLineIndex)
-      const keysAfterActiveLine = sortedKeys.slice(activeLineIndex + 1)
-
-      // Combine the keys in the order: keysAfterActiveLine, activeLine, keysBeforeActiveLine
-      const keysToShow = [
-        ...keysAfterActiveLine,
-        'all_deaths', // Add 'all_deaths' to show the total deaths line
-        activeLine,
-        ...keysBeforeActiveLine,
-      ]
-
-      keysToShow.forEach((key) => {
-        const formattedValue = formatDeaths(datapoint[key])
-        const lineColor = dataColors[dataKeys.indexOf(key)]
-        tooltipHtml += `
-          <svg height="10" width="10" style="vertical-align: middle;">
-            <circle cx="5" cy="5" r="5" fill="${lineColor}" />
-          </svg>
-          <span class="key">${key} </span>
-          <span class="value">${formattedValue}</span><br>
-        `
-      })
-    }
   } else {
     // Show all data keys except 'all_deaths' in the tooltip using sortedKeys
     sortedKeys.forEach((key) => {
@@ -202,6 +172,14 @@ function setupChart(data) {
       .attr('fill', 'none')
       .attr('stroke', dataColors[index])
       .attr('d', line)
+      .on('mouseover', () => {
+        // Set the activeLine when the user hovers over a line
+        activeLine = key
+      })
+      .on('mouseout', () => {
+        // Reset the activeLine when the user stops hovering over a line
+        activeLine = null
+      })
   })
 
   // Append x-axis
@@ -350,8 +328,6 @@ function setupChart(data) {
       const index = bisect(data, date)
       const datapoint = data[index]
 
-      activeDatapoint = datapoint // Store the active datapoint for use in 'show-cause-data' display mode
-
       // Get the selected display mode from the radio buttons
       const displayMode = d3
         .select('input[name="tooltip-option"]:checked')
@@ -459,6 +435,12 @@ function handleResize(data, event) {
       .selectAll(`.${key}-line`)
       .attr('d', line)
       .style('opacity', isVisible ? 1 : 0)
+      .on('mouseover', () => {
+        activeLine = key
+      })
+      .on('mouseout', () => {
+        activeLine = null
+      })
 
     bounds.selectAll(`.${key}-circle`).style('opacity', isVisible ? 1 : 0)
   })
