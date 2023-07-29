@@ -380,17 +380,13 @@ function handleMousemove(event, data) {
 
 // Function to handle window resize
 function handleResize(data, event) {
-  if (bounds !== null) {
-    bounds.select('.legend').selectAll('*').remove()
-  }
-
-  const wrapper = d3.select('#chart').select('svg')
-  bounds = wrapper.select('g')
-
-  const margin = { top: 20, right: 30, bottom: 60, left: 50 }
+  // Get the updated width and height after window resize
+  const margin = { top: 50, right: 30, bottom: 175, left: 120 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
+  // Update the SVG wrapper size and bounds transform
+  const wrapper = d3.select('#chart').select('svg')
   wrapper
     .attr('width', '100%')
     .attr('height', '100%')
@@ -400,52 +396,20 @@ function handleResize(data, event) {
         height + margin.top + margin.bottom
       }`
     )
-
   bounds.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
-  // Update scales with new data range
-  xScale = d3
-    .scaleTime()
-    .domain(d3.extent(data, (d) => d.date))
-    .range([0, width])
-  yScale = d3
-    .scaleLinear()
-    .domain([
-      0,
-      d3.max(data, (d) =>
-        d3.max([
-          d.all_deaths,
-          d.natural_deaths,
-          d.covid_19_multiple,
-          d.covid_19_underlying,
-          d.drug_overdose,
-          d.homicide,
-          d.suicide,
-          d.vehicle_accidents,
-          d.unintentional_injuries,
-          d.heart_diseases,
-          d.cerebrovascular_diseases,
-          d.alzheimers,
-          d.diabetes,
-          d.influenza_pneumonia,
-        ])
-      ),
-    ])
-    .range([height, 0])
+  // Update the scales with the new data range
+  xScale.range([0, width])
+  yScale.range([height, 0])
 
+  // Update the x-axis and y-axis
   bounds
     .select('.x-axis')
     .attr('transform', `translate(0, ${height})`)
     .call(d3.axisBottom(xScale))
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
 
-  // Update the activeDatapoint when window resizes
-  const [x, y] = d3.pointer(event, this)
-  const date = xScale.invert(x)
-  const bisect = d3.bisector((d) => d.date).left
-  const index = bisect(data, date)
-  activeDatapoint = data[index]
-
+  // Update the lines on resize
   // Update the lines on resize
   dataKeys.forEach((key) => {
     const line = lineGenerator(key)
@@ -465,61 +429,44 @@ function handleResize(data, event) {
         handleMousemove(event, data)
       })
 
-    bounds.selectAll(`.${key}-circle`).style('opacity', isVisible ? 1 : 0)
+    // Reset the circles' positions and hide them after every resize
+    bounds
+      .selectAll(`.${key}-circle`)
+      .style('opacity', 0)
+      .attr('cx', (d) => xScale(d.date))
+      .attr('cy', (d) => yScale(d[key]))
   })
 
   // Update x-axis label position
   bounds
     .select('.x-axis-label')
     .attr('x', width / 2)
-    .attr('y', height + margin.bottom - 30) // Adjust the y position as needed
+    .attr('y', height + margin.bottom - 120)
+    .style('text-anchor', 'middle')
 
-  // Update legend position
-  const legendItemsPerRow = 4
-  const legendItemWidth = 100
-  const legendPadding = 10
+  // Update legend position and items per row based on new width
+  const legendItemWidth = 150 // Adjust this value based on your preference
+  const legendPadding = 10 // Adjust this value based on your preference
+  const legendItemsPerRow = Math.floor(
+    width / (legendItemWidth + legendPadding)
+  )
   const legendRows = Math.ceil(dataKeys.length / legendItemsPerRow)
-  const legend = bounds
-    .select('.legend')
-    .attr('transform', `translate(0, ${height + margin.bottom + 30})`)
+  const legendXOffset =
+    (width - Math.min(legendItemWidth * legendItemsPerRow, width)) / 2
+  const legendYOffset = height + margin.bottom - legendRows * 20 - 30
 
-  // Remove existing legend items before updating
-  bounds.select('.legend').selectAll('*').remove()
+  const legend = bounds.select('.legend')
+  legend.attr('transform', `translate(${legendXOffset}, ${legendYOffset})`)
 
-  const legendRow = legend
-    .selectAll('.legend-row')
-    .data(d3.range(legendRows))
-    .enter()
-    .append('g')
-    .attr('class', 'legend-row')
-    .attr('transform', (d, i) => `translate(0, ${i * (20 + legendPadding)})`)
-
-  const legendItems = legendRow
-    .selectAll('.legend-item')
-    .data((d, i) =>
-      dataKeys.slice(i * legendItemsPerRow, (i + 1) * legendItemsPerRow)
-    )
-    .enter()
-    .append('g')
-    .attr('class', 'legend-item')
-    .attr('transform', (d, i) => `translate(${i * legendItemWidth}, 0)`)
-
-  // Add colored circles to represent the lines
-  legendItems
-    .append('circle')
-    .attr('cx', 5)
-    .attr('cy', 5)
-    .attr('r', 5)
-    .attr('fill', (d, i) => dataColors[dataKeys.indexOf(d)])
-
-  // Add text labels for the legend keys
-  legendItems
-    .append('text')
-    .attr('x', 15)
-    .attr('y', 10)
-    .text((d) => d)
-    .style('font-size', '12px')
-    .attr('alignment-baseline', 'middle')
+  // Update legend items' position
+  const legendKeys = legend.selectAll('.legend-key')
+  legendKeys.attr('transform', (d, i) => {
+    const row = Math.floor(i / legendItemsPerRow)
+    const col = i % legendItemsPerRow
+    const xOffset = col * (legendItemWidth + legendPadding)
+    const yOffset = row * 20 // Adjust this value based on your preference
+    return `translate(${xOffset}, ${yOffset})`
+  })
 }
 
 // Function to parse and process data
