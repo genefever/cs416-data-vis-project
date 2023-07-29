@@ -117,9 +117,9 @@ function toggleLineAndLegend(key) {
       dataKey === key
         ? isVisible
           ? 1
-          : 0.2
+          : 0.1
         : lineVisibility[dataKey]
-        ? 0.2
+        ? 0.1
         : 1
     line.transition().duration(250).style('opacity', newOpacity)
     circle.transition().duration(250).style('opacity', newOpacity)
@@ -364,15 +364,19 @@ function handleMousemove(event, data) {
 
   // Show circles for each data key when mouseover occurs
   dataKeys.forEach((key) => {
-    const circle = bounds.select(`.${key}-circle`)
-    const closestDataPoint = data[index]
-    const closestXValue = xScale(closestDataPoint.date)
-    const closestYValue = yScale(closestDataPoint[key])
+    if (lineVisibility[key]) {
+      const circle = bounds.select(`.${key}-circle`)
+      const closestDataPoint = data[index]
+      const closestXValue = xScale(closestDataPoint.date)
+      const closestYValue = yScale(closestDataPoint[key])
 
-    circle
-      .attr('cx', closestXValue)
-      .attr('cy', closestYValue)
-      .style('opacity', 1)
+      circle
+        .attr('cx', closestXValue)
+        .attr('cy', closestYValue)
+        .style('opacity', 1)
+    } else {
+      bounds.select(`.${key}-circle`).style('opacity', 0)
+    }
   })
 
   verticalLine.attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', height) // Update vertical line position
@@ -409,7 +413,6 @@ function handleResize(data, event) {
     .call(d3.axisBottom(xScale))
   bounds.select('.y-axis').call(d3.axisLeft(yScale))
 
-  // Update the lines on resize
   // Update the lines on resize
   dataKeys.forEach((key) => {
     const line = lineGenerator(key)
