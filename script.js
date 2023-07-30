@@ -211,6 +211,21 @@ function toggleLineAndLegend(x, y, event, key, data) {
   handleMousemove(event, data)
 }
 
+function toggleTooltipOption(option) {
+  const displayMode = d3
+    .select('input[name="tooltip-option"]:checked')
+    .node().value
+  if (option === displayMode) return // No need to update if already selected
+
+  d3.select(`#${displayMode}`).property('checked', false)
+  d3.select(`#${option}`).property('checked', true)
+
+  // Update the tooltip content when toggling the option
+  const tooltipHtml = updateTooltipContent(activeDatapoint, option, activeLine)
+  const tooltip = d3.select('#tooltip')
+  tooltip.html(tooltipHtml)
+}
+
 // Function to set up the chart with data
 function setupChart(data) {
   // Set up the SVG container

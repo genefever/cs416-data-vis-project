@@ -11,6 +11,8 @@
 
     <div id="chart" class="chart-container">
       <div class="tooltip-options">
+        <h4>Tooltip Options</h4>
+        <hr />
         <input
           type="radio"
           id="show-all-data"
@@ -18,7 +20,11 @@
           value="show-all-data"
           checked
         />
-        <label for="show-all-data">Show all data</label>
+        <label
+          for="show-all-data"
+          onclick="toggleTooltipOption('show-all-data')"
+          >Show all data</label
+        >
         <br />
         <input
           type="radio"
@@ -26,7 +32,11 @@
           name="tooltip-option"
           value="show-top-4-data"
         />
-        <label for="show-top-4-data">Show the top 3 data</label>
+        <label
+          for="show-top-4-data"
+          onclick="toggleTooltipOption('show-top-4-data')"
+          >Show top 3 data</label
+        >
         <br />
       </div>
     </div>
