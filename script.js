@@ -32,7 +32,8 @@ const dataColors = [
   'sienna',
 ]
 let lineVisibility = {}
-let xScale,
+let data,
+  xScale,
   yScale,
   margin,
   width,
@@ -53,7 +54,7 @@ const lineGenerator = (key) =>
 function updateCircles() {
   dataKeys.forEach((key) => {
     const isVisible = lineVisibility[key]
-    const circle = bounds.select(`.${key}-circle`)
+    const circle = bounds.selectAll(`.${key}-circle`)
 
     circle.style('opacity', (d) => {
       if (activeLine) {
@@ -224,6 +225,101 @@ function toggleTooltipOption(option) {
   const tooltipHtml = updateTooltipContent(activeDatapoint, option, activeLine)
   const tooltip = d3.select('#tooltip')
   tooltip.html(tooltipHtml)
+}
+
+function toggleYAxisScale(scaleType) {
+  if (scaleType === 'linear') {
+    yScale = d3
+      .scaleLinear()
+      .domain([
+        0,
+        d3.max(data, (d) =>
+          d3.max([
+            d.all_deaths,
+            d.natural_deaths,
+            d.covid_19_multiple,
+            d.covid_19_underlying,
+            d.drug_overdose,
+            d.homicide,
+            d.suicide,
+            d.vehicle_accidents,
+            d.unintentional_injuries,
+            d.heart_diseases,
+            d.cerebrovascular_diseases,
+            d.alzheimers,
+            d.diabetes,
+            d.influenza_pneumonia,
+          ])
+        ),
+      ])
+      .range([height, 0])
+  } else if (scaleType === 'log-base-2') {
+    yScale = d3
+      .scaleLog()
+      .base(2)
+      .domain([
+        1,
+        d3.max(data, (d) =>
+          d3.max([
+            d.all_deaths,
+            d.natural_deaths,
+            d.covid_19_multiple,
+            d.covid_19_underlying,
+            d.drug_overdose,
+            d.homicide,
+            d.suicide,
+            d.vehicle_accidents,
+            d.unintentional_injuries,
+            d.heart_diseases,
+            d.cerebrovascular_diseases,
+            d.alzheimers,
+            d.diabetes,
+            d.influenza_pneumonia,
+          ])
+        ),
+      ])
+      .range([height, 0])
+  }
+
+  // Update the y-axis
+  bounds.select('.y-axis').call(d3.axisLeft(yScale))
+
+  // Update the lines on y-axis scale change
+  dataKeys.forEach((key) => {
+    const line = lineGenerator(key)
+    const isVisible = lineVisibility[key]
+
+    bounds
+      .selectAll(`.${key}-line`)
+      .attr('d', line)
+      .style('opacity', isVisible ? 1 : 0)
+      .on('mouseover', () => {
+        activeLine = key
+      })
+      .on('mouseout', () => {
+        activeLine = null
+      })
+      .on('mousemove', (event) => {
+        handleMousemove(event, data)
+      })
+
+    // Hide the circles temporarily during y-axis scale change
+    bounds.selectAll(`.${key}-circle`).style('opacity', 0)
+  })
+
+  // Update tooltip content and circles based on the active line and y-axis scale
+  const displayMode = d3
+    .select('input[name="tooltip-option"]:checked')
+    .node().value
+  const tooltipHtml = updateTooltipContent(
+    activeDatapoint,
+    displayMode,
+    activeLine
+  )
+  const tooltip = d3.select('#tooltip')
+  tooltip.html(tooltipHtml)
+
+  updateCircles()
 }
 
 // Function to set up the chart with data
@@ -627,7 +723,8 @@ function processData(csvData) {
 function main() {
   d3.csv('data_deaths_2020_2023.csv')
     .then(processData)
-    .then((data) => {
+    .then((loadedData) => {
+      data = loadedData
       // Initial setup of the chart
       setupChart(data)
 
@@ -648,6 +745,9 @@ function main() {
 
       // Add window resize event listener
       window.addEventListener('resize', (event) => handleResize(data, event))
+
+      // Call toggleYAxisScale initially with the default y-axis scale (linear)
+      toggleYAxisScale('linear')
     })
     .catch((error) => {
       console.error('Error loading CSV data:', error)

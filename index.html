@@ -42,6 +42,29 @@
         >
         <br />
       </div>
+      <div class="y-axis-options">
+        <h4>Y-Axis Options</h4>
+        <hr />
+        <input
+          type="radio"
+          id="linear-y-axis"
+          name="y-axis-option"
+          value="linear"
+          checked
+          onchange="toggleYAxisScale('linear')"
+        />
+        <label for="linear-y-axis">Linear</label>
+        <br />
+        <input
+          type="radio"
+          id="log-base-2-y-axis"
+          name="y-axis-option"
+          value="log-base-2"
+          onchange="toggleYAxisScale('log-base-2')"
+        />
+        <label for="log-base-2-y-axis">Log (Base 2)</label>
+        <br />
+      </div>
     </div>
 
     <div id="tooltip" class="tooltip-container"></div>
