@@ -90,6 +90,16 @@ body {
   cursor: pointer;
 }
 
+.tooltip-options label:hover {
+  color: #1890ff;
+  text-decoration: underline;
+}
+
+.tooltip-options input[type='radio']:checked + label {
+  color: #1890ff;
+  font-weight: bold;
+}
+
 .chart-container .radio {
   position: absolute;
   top: 10px;
@@ -257,4 +267,42 @@ path:nth-child(4) {
   stroke: red; /* Change the color to match the circle */
   stroke-width: 1px;
   stroke-dasharray: 3 3; /* Make it a dashed line */
+}
+
+.y-axis-options {
+  margin-left: -10px;
+  margin-right: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background-color: #f7f7f7;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.y-axis-options input[type='radio'] {
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.y-axis-options h4 {
+  margin: 0;
+}
+
+.y-axis-options label {
+  cursor: pointer;
+}
+
+.y-axis-options hr {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.y-axis-options label:hover {
+  color: #1890ff;
+  text-decoration: underline;
+}
+
+.y-axis-options input[type='radio']:checked + label {
+  color: #1890ff;
+  font-weight: bold;
 }
