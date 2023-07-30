@@ -312,11 +312,12 @@ function setupChart(data) {
   bounds
     .append('text')
     .attr('transform', 'rotate(-90)')
-    .attr('y', 0 - margin.left - 50)
+    .attr('y', 0 - margin.left + 50)
     .attr('x', 0 - height / 2)
     .attr('dy', '1em')
     .style('text-anchor', 'middle')
     .text('Number of Deaths')
+    .classed('y-axis-label', true)
 
   // Append the legend
   const legend = bounds
@@ -536,6 +537,13 @@ function handleResize(data, event) {
     .attr('y', height + margin.bottom - 120)
     .style('text-anchor', 'middle')
 
+  // Update y-axis label position
+  bounds
+    .select('.y-axis-label')
+    .attr('y', -margin.left + 50)
+    .attr('x', 0 - height / 2)
+    .style('text-anchor', 'middle')
+
   // Update legend position and items per row based on new width
   const legendItemWidth = 150 // Adjust this value based on your preference
   const legendPadding = 10 // Adjust this value based on your preference
@@ -571,8 +579,6 @@ function handleResize(data, event) {
   activeLine = null
   activeDatapoint = null
 }
-
-// ... (rest of the code remains unchanged)
 
 // Function to parse and process data
 function processData(csvData) {
