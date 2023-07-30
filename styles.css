@@ -13,7 +13,7 @@ body {
 
 .chart-container {
   position: relative;
-  margin-top: 20px;
+  margin-top: 50px;
   margin-left: -50px;
 }
 
@@ -197,12 +197,12 @@ body {
   border-top: 5px solid #ccc; /* Change to border-top to create a pointer at the bottom */
 }
 
-h1 {
+h2 {
   color: #333;
   text-align: center;
-  padding: 10px;
-  font-size: 32px;
+  padding: 0 30px 20px;
   text-transform: uppercase;
+  margin-top: 30px;
 }
 
 svg {
