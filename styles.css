@@ -47,10 +47,12 @@ body {
 
 .tooltip-container .key {
   font-weight: bold;
+  padding-right: 8px;
 }
 
 .tooltip-container .value {
   float: right;
+  padding-left: 8px;
 }
 
 .tooltip-container::before {

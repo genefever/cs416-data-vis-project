@@ -46,6 +46,22 @@ const lineGenerator = (key) =>
     .x((d) => xScale(d.date))
     .y((d) => yScale(d[key]))
 
+// Function to update the circles based on active line and visibility status
+function updateCircles() {
+  dataKeys.forEach((key) => {
+    const isVisible = lineVisibility[key]
+    const circle = bounds.select(`.${key}-circle`)
+
+    circle.style('opacity', (d) => {
+      if (activeLine) {
+        return key === activeLine && isVisible ? 1 : 0
+      } else {
+        return isVisible ? 1 : 0
+      }
+    })
+  })
+}
+
 // Function to update tooltip content based on the selected display mode
 function updateTooltipContent(datapoint, displayMode, activeLine) {
   const formatDate = d3.timeFormat('%B %Y')
@@ -405,10 +421,14 @@ function setupChart(data) {
 
 // Function to handle mousemove event
 function handleMousemove(event, data) {
+  // Hide all circles when mousemove occurs
+  bounds.selectAll('circle').style('opacity', 0)
+
   const [x, y] = d3.pointer(event, bounds.select('.overlay').node())
   const date = xScale.invert(x)
   const bisect = d3.bisector((d) => d.date).left
   const index = bisect(data, date)
+  const closestDataPoint = data[index]
   const margin = { top: 50, right: 30, bottom: 175, left: 120 }
   const height = window.innerHeight - margin.top - margin.bottom
   activeDatapoint = data[index]
@@ -432,7 +452,6 @@ function handleMousemove(event, data) {
   dataKeys.forEach((key) => {
     if (lineVisibility[key]) {
       const circle = bounds.select(`.${key}-circle`)
-      const closestDataPoint = data[index]
       const closestXValue = xScale(closestDataPoint.date)
       const closestYValue = yScale(closestDataPoint[key])
 
@@ -444,6 +463,12 @@ function handleMousemove(event, data) {
       bounds.select(`.${key}-circle`).style('opacity', 0)
     }
   })
+
+  // Update the activeDatapoint based on the closest data point
+  activeDatapoint = closestDataPoint
+
+  // Update the circles based on the active line and visibility status
+  updateCircles()
 
   verticalLine.attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', height) // Update vertical line position
 }
@@ -498,12 +523,8 @@ function handleResize(data, event) {
         handleMousemove(event, data)
       })
 
-    // Reset the circles' positions and hide them after every resize
-    bounds
-      .selectAll(`.${key}-circle`)
-      .style('opacity', 0)
-      .attr('cx', (d) => xScale(d.date))
-      .attr('cy', (d) => yScale(d[key]))
+    // Hide the circles temporarily during window resize
+    bounds.selectAll(`.${key}-circle`).style('opacity', 0)
   })
 
   // Update x-axis label position
@@ -536,7 +557,20 @@ function handleResize(data, event) {
     const yOffset = row * 20 // Adjust this value based on your preference
     return `translate(${xOffset}, ${yOffset})`
   })
+
+  // Hide the vertical line during window resize
+  verticalLine.style('opacity', 0)
+
+  // Remove the 'show' class from the tooltip to hide it during window resize
+  const tooltip = d3.select('#tooltip')
+  tooltip.classed('show', false)
+
+  // Clear the active line and activeDatapoint during window resize
+  activeLine = null
+  activeDatapoint = null
 }
+
+// ... (rest of the code remains unchanged)
 
 // Function to parse and process data
 function processData(csvData) {
