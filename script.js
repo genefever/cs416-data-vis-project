@@ -440,10 +440,10 @@ function setupChart(data) {
     .append('g')
     .attr('class', 'legend-title')
     .append('text')
-    .attr('x', (width - margin.left - margin.right) / 5)
+    .attr('x', (width - margin.left - margin.right) / 4 - 25)
     .attr('y', -8) // Adjust the vertical position of the title
     .style('text-anchor', 'middle')
-    .text('Cause of Death Categories (Click a legend to toggle)')
+    .text('Cause of Death Categories (Click on a legend to view detail)')
 
   const legendItemWidth = 250 // Adjust this value based on your preference
   const legendItemsPerRow = Math.floor(width / legendItemWidth)
