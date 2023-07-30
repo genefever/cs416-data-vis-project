@@ -34,6 +34,9 @@ const dataColors = [
 let lineVisibility = {}
 let xScale,
   yScale,
+  margin,
+  width,
+  height,
   activeDatapoint,
   verticalLine,
   activeLine,
@@ -214,9 +217,9 @@ function setupChart(data) {
   const chartContainer = d3.select('#chart')
   const wrapper = chartContainer.append('svg')
   bounds = wrapper.append('g')
-  const margin = { top: 50, right: 30, bottom: 175, left: 120 }
-  const width = window.innerWidth - margin.left - margin.right
-  const height = window.innerHeight - margin.top - margin.bottom
+  margin = { top: 50, right: 30, bottom: 175, left: 150 }
+  width = window.innerWidth - margin.left - margin.right
+  height = window.innerHeight - margin.top - margin.bottom
 
   wrapper
     .attr('width', '100%')
@@ -476,7 +479,6 @@ function handleMousemove(event, data) {
 // Function to handle window resize
 function handleResize(data, event) {
   // Get the updated width and height after window resize
-  const margin = { top: 50, right: 30, bottom: 175, left: 120 }
   const width = window.innerWidth - margin.left - margin.right
   const height = window.innerHeight - margin.top - margin.bottom
 
