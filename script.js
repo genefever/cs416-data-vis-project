@@ -36,8 +36,9 @@ let xScale,
   yScale,
   activeDatapoint,
   verticalLine,
-  bounds = null,
-  activeLine = null
+  activeLine,
+  lastLineClicked = null,
+  bounds = null
 
 const lineGenerator = (key) =>
   d3
@@ -46,7 +47,7 @@ const lineGenerator = (key) =>
     .y((d) => yScale(d[key]))
 
 // Function to update tooltip content based on the selected display mode
-function updateTooltipContent(datapoint, displayMode) {
+function updateTooltipContent(datapoint, displayMode, activeLine) {
   const formatDate = d3.timeFormat('%B %Y')
   const formattedDate = formatDate(datapoint.date)
   const formatDeaths = d3.format(',')
@@ -54,7 +55,7 @@ function updateTooltipContent(datapoint, displayMode) {
   // Build the tooltip HTML content with colored circles
   let tooltipHtml = `<strong>${formattedDate}</strong><br>`
 
-  // Add all_deaths value to the tooltip with a separator and highlight it
+  // Always show Total Deaths to the tooltip with a separator below it
   const allDeathsValue = formatDeaths(datapoint['all_deaths'])
   tooltipHtml += `
     <div class="all-deaths">
@@ -71,64 +72,126 @@ function updateTooltipContent(datapoint, displayMode) {
     .slice()
     .sort((a, b) => (a === 'all_deaths' ? -1 : datapoint[b] - datapoint[a]))
 
-  if (displayMode === 'show-top-4-data') {
-    // Limit to the top 3 data keys and exclude 'all_deaths' from the sorted keys
-    const topKeys = sortedKeys.slice(0, 4).filter((key) => key !== 'all_deaths')
+  // Show data for the active line only
+  if (activeLine) {
+    const formattedValue = formatDeaths(datapoint[activeLine])
+    const lineColor = dataColors[dataKeys.indexOf(activeLine)]
+    tooltipHtml += `
+      <svg height="10" width="10" style="vertical-align: middle;">
+        <circle cx="5" cy="5" r="5" fill="${lineColor}" />
+      </svg>
+      <span class="key">${activeLine} </span>
+      <span class="value">${formattedValue}</span><br>
+    `
+  } else {
+    if (displayMode === 'show-top-4-data') {
+      // Limit to the top 3 data keys and exclude 'all_deaths' from the sorted keys
+      const topKeys = sortedKeys
+        .slice(0, 4)
+        .filter((key) => key !== 'all_deaths')
 
-    topKeys.forEach((activeLine) => {
-      const formattedValue = formatDeaths(datapoint[activeLine])
-      const lineColor = dataColors[dataKeys.indexOf(activeLine)]
-      tooltipHtml += `
+      topKeys.forEach((activeLine) => {
+        const formattedValue = formatDeaths(datapoint[activeLine])
+        const lineColor = dataColors[dataKeys.indexOf(activeLine)]
+        tooltipHtml += `
         <svg height="10" width="10" style="vertical-align: middle;">
           <circle cx="5" cy="5" r="5" fill="${lineColor}" />
         </svg>
         <span class="key">${activeLine} </span>
         <span class="value">${formattedValue}</span><br>
       `
-    })
-  } else {
-    // Show all data keys except 'all_deaths' in the tooltip using sortedKeys
-    sortedKeys.forEach((key) => {
-      if (key !== 'all_deaths') {
-        const formattedValue = formatDeaths(datapoint[key])
-        const lineColor = dataColors[dataKeys.indexOf(key)]
-        tooltipHtml += `
+      })
+    } else {
+      // Show all data keys except 'all_deaths' in the tooltip using sortedKeys
+      sortedKeys.forEach((key) => {
+        if (key !== 'all_deaths') {
+          const formattedValue = formatDeaths(datapoint[key])
+          const lineColor = dataColors[dataKeys.indexOf(key)]
+          tooltipHtml += `
           <svg height="10" width="10" style="vertical-align: middle;">
             <circle cx="5" cy="5" r="5" fill="${lineColor}" />
           </svg>
           <span class="key">${key} </span>
           <span class="value">${formattedValue}</span><br>
         `
-      }
-    })
+        }
+      })
+    }
   }
 
   return tooltipHtml
 }
 
-function toggleLineAndLegend(key) {
+function toggleLineAndLegend(x, y, event, key, data) {
   let isVisible = lineVisibility[key]
 
   // Toggle the visibility of all lines and circles
   dataKeys.forEach((dataKey) => {
     const line = bounds.select(`.${dataKey}-line`)
     const circle = bounds.selectAll(`.${dataKey}-circle`)
-    const newOpacity =
-      dataKey === key
-        ? isVisible
-          ? 1
-          : 0.1
-        : lineVisibility[dataKey]
-        ? 0.1
-        : 1
+    let newOpacity = 1
+
+    // If this is the first ever click, then toggle the visibility of the current line
+    if (lastLineClicked === null) {
+      if (dataKey === key) {
+        newOpacity = 1
+        lineVisibility[dataKey] = true
+      } else {
+        newOpacity = 0.1
+        lineVisibility[dataKey] = false
+      }
+    } else {
+      // If lastLineClicked is the same as the current key,
+      if (lastLineClicked === key) {
+        // Then toggle on all the lines
+        if (isVisible) {
+          if (dataKey !== key) {
+            newOpacity = lineVisibility[dataKey] ? 0.1 : 1
+            lineVisibility[dataKey] = !lineVisibility[dataKey]
+          }
+        }
+      } else {
+        // Else if lastLineClicked is not the same as the current key,
+        // then toggle off all the lines except the current key
+        if (dataKey === key) {
+          newOpacity = 1
+          lineVisibility[dataKey] = true
+        } else {
+          newOpacity = 0.1
+          lineVisibility[dataKey] = false
+        }
+      }
+    }
+
     line.transition().duration(250).style('opacity', newOpacity)
     circle.transition().duration(250).style('opacity', newOpacity)
-    lineVisibility[dataKey] = dataKey === key ? true : !lineVisibility[dataKey]
   })
 
   // Update the legend item styling
   const legendItem = bounds.selectAll(`.${key}-legend-item`)
   legendItem.classed('selected', isVisible)
+
+  // Update the active line based on whether it is toggled or de-selected
+  activeLine = lastLineClicked && isVisible ? null : key
+  lastLineClicked = activeLine
+  // Update tooltip content based on the selected line
+  const displayMode = d3
+    .select('input[name="tooltip-option"]:checked')
+    .node().value
+  const tooltipHtml = updateTooltipContent(
+    activeDatapoint,
+    displayMode,
+    activeLine
+  )
+  const tooltip = d3.select('#tooltip')
+  tooltip
+    .style('left', x + 'px')
+    .style('top', y + 'px')
+    .html(tooltipHtml)
+    .classed('show', true)
+
+  // Update the tooltip content when toggling a line
+  handleMousemove(event, data)
 }
 
 // Function to set up the chart with data
@@ -280,7 +343,8 @@ function setupChart(data) {
 
   // Add click event listener to each legend item to toggle visibility
   legendKeys.on('click', (event, key) => {
-    toggleLineAndLegend(key)
+    const [x, y] = d3.pointer(event, bounds.select('.overlay').node())
+    toggleLineAndLegend(x, y, event, key, data)
   })
 
   // Calculate the total height of the legend
@@ -340,13 +404,12 @@ function setupChart(data) {
     })
 }
 
-// Function to update tooltip content when mouse moves
+// Function to handle mousemove event
 function handleMousemove(event, data) {
   const [x, y] = d3.pointer(event, bounds.select('.overlay').node())
   const date = xScale.invert(x)
   const bisect = d3.bisector((d) => d.date).left
   const index = bisect(data, date)
-  // Temp
   const margin = { top: 50, right: 30, bottom: 175, left: 120 }
   const height = window.innerHeight - margin.top - margin.bottom
   activeDatapoint = data[index]
@@ -354,7 +417,11 @@ function handleMousemove(event, data) {
   const displayMode = d3
     .select('input[name="tooltip-option"]:checked')
     .node().value
-  const tooltipHtml = updateTooltipContent(activeDatapoint, displayMode)
+  const tooltipHtml = updateTooltipContent(
+    activeDatapoint,
+    displayMode,
+    activeLine
+  )
   const tooltip = d3.select('#tooltip')
   tooltip
     .style('left', x + 'px')
