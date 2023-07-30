@@ -124,14 +124,14 @@ function updateTooltipContent(datapoint, displayMode, activeLine) {
 
 function toggleLineAndLegend(x, y, event, key, data) {
   let isVisible = lineVisibility[key]
+  let newOpacity
 
   // Toggle the visibility of all lines and circles
   dataKeys.forEach((dataKey) => {
     const line = bounds.select(`.${dataKey}-line`)
     const circle = bounds.selectAll(`.${dataKey}-circle`)
-    let newOpacity = 1
 
-    // If this is the first ever click, then toggle the visibility of the current line
+    // Determine the new opacity for the current data key
     if (lastLineClicked === null) {
       if (dataKey === key) {
         newOpacity = 1
@@ -141,18 +141,12 @@ function toggleLineAndLegend(x, y, event, key, data) {
         lineVisibility[dataKey] = false
       }
     } else {
-      // If lastLineClicked is the same as the current key,
       if (lastLineClicked === key) {
-        // Then toggle on all the lines
-        if (isVisible) {
-          if (dataKey !== key) {
-            newOpacity = lineVisibility[dataKey] ? 0.1 : 1
-            lineVisibility[dataKey] = !lineVisibility[dataKey]
-          }
+        if (isVisible && dataKey !== key) {
+          newOpacity = lineVisibility[dataKey] ? 0.1 : 1
+          lineVisibility[dataKey] = !lineVisibility[dataKey]
         }
       } else {
-        // Else if lastLineClicked is not the same as the current key,
-        // then toggle off all the lines except the current key
         if (dataKey === key) {
           newOpacity = 1
           lineVisibility[dataKey] = true
@@ -163,17 +157,21 @@ function toggleLineAndLegend(x, y, event, key, data) {
       }
     }
 
+    // Apply the new opacity to the line and circle elements
     line.transition().duration(250).style('opacity', newOpacity)
     circle.transition().duration(250).style('opacity', newOpacity)
   })
 
-  // Update the legend item styling
-  const legendItem = bounds.selectAll(`.${key}-legend-item`)
-  legendItem.classed('selected', isVisible)
+  // Update the legend items' opacity after determining the final newOpacity value
+  dataKeys.forEach((dataKey) => {
+    const legendItem = bounds.select(`.${dataKey}-legend-item`)
+    legendItem.style('opacity', lineVisibility[dataKey] ? 1 : 0.1)
+  })
 
   // Update the active line based on whether it is toggled or de-selected
   activeLine = lastLineClicked && isVisible ? null : key
   lastLineClicked = activeLine
+
   // Update tooltip content based on the selected line
   const displayMode = d3
     .select('input[name="tooltip-option"]:checked')
@@ -329,6 +327,7 @@ function setupChart(data) {
     .attr('width', 10)
     .attr('height', 10)
     .attr('fill', (d, i) => dataColors[i])
+    .attr('class', (d) => `${d}-legend-item`)
 
   legendKeys
     .append('text')
