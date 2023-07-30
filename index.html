@@ -13,57 +13,59 @@
     </h2>
 
     <div id="chart" class="chart-container">
-      <div class="tooltip-options">
-        <h4>Tooltip Setting</h4>
-        <hr />
-        <input
-          type="radio"
-          id="show-all-data"
-          name="tooltip-option"
-          value="show-all-data"
-          checked
-        />
-        <label
-          for="show-all-data"
-          onclick="toggleTooltipOption('show-all-data')"
-          >Show all data</label
-        >
-        <br />
-        <input
-          type="radio"
-          id="show-top-4-data"
-          name="tooltip-option"
-          value="show-top-4-data"
-        />
-        <label
-          for="show-top-4-data"
-          onclick="toggleTooltipOption('show-top-4-data')"
-          >Show top 3 data</label
-        >
-        <br />
-      </div>
-      <div class="y-axis-options">
-        <h4>Y-Axis Setting</h4>
-        <hr />
-        <input
-          type="radio"
-          id="linear-y-axis"
-          name="y-axis-option"
-          value="linear"
-          checked
-          onchange="toggleYAxisScale('linear')"
-        />
-        <label for="linear-y-axis">Linear</label>
-        <br />
-        <input
-          type="radio"
-          id="log-base-2-y-axis"
-          name="y-axis-option"
-          value="log-base-2"
-          onchange="toggleYAxisScale('log-base-2')"
-        />
-        <label for="log-base-2-y-axis">Logarithmic (Base 2)</label>
-        <br />
+      <div class="options-container">
+        <div class="tooltip-options">
+          <h4>Tooltip Setting</h4>
+          <hr />
+          <input
+            type="radio"
+            id="show-all-data"
+            name="tooltip-option"
+            value="show-all-data"
+            checked
+          />
+          <label
+            for="show-all-data"
+            onclick="toggleTooltipOption('show-all-data')"
+            >Show all data</label
+          >
+          <br />
+          <input
+            type="radio"
+            id="show-top-4-data"
+            name="tooltip-option"
+            value="show-top-4-data"
+          />
+          <label
+            for="show-top-4-data"
+            onclick="toggleTooltipOption('show-top-4-data')"
+            >Show top 3 data</label
+          >
+          <br />
+        </div>
+        <div class="y-axis-options">
+          <h4>Y-Axis Setting</h4>
+          <hr />
+          <input
+            type="radio"
+            id="linear-y-axis"
+            name="y-axis-option"
+            value="linear"
+            checked
+            onchange="toggleYAxisScale('linear')"
+          />
+          <label for="linear-y-axis">Linear</label>
+          <br />
+          <input
+            type="radio"
+            id="log-base-2-y-axis"
+            name="y-axis-option"
+            value="log-base-2"
+            onchange="toggleYAxisScale('log-base-2')"
+          />
+          <label for="log-base-2-y-axis">Logarithmic (Base 2)</label>
+          <br />
+        </div>
       </div>
     </div>
 
